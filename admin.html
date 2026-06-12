@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin • Tails & Toys LLC</title>
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="alternate icon" href="images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="admin-container">
+    <h1>
+      <a href="index.html" class="logo-link">
+      <svg class="cat-mascot" width="36" height="36" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Tail -->
+        <path d="M35 85 C 8 85, 2 48, 24 33 C 30 29, 37 36, 31 44 C 20 55, 24 76, 40 79 Z" fill="#1e293b"/>
+        <!-- Back legs -->
+        <ellipse cx="46" cy="98" rx="11" ry="7" fill="#1e293b"/>
+        <ellipse cx="70" cy="98" rx="11" ry="7" fill="#1e293b"/>
+        <!-- Body -->
+        <ellipse cx="58" cy="80" rx="27" ry="21" fill="#1e293b"/>
+        <!-- Head -->
+        <circle cx="79" cy="52" r="16" fill="#1e293b"/>
+        <!-- Ears -->
+        <path d="M69 41 L64 28 L78 39 Z" fill="#1e293b"/>
+        <path d="M90 41 L97 27 L82 38 Z" fill="#1e293b"/>
+        <!-- Animated paw swiping at the ball -->
+        <g class="cat-paw">
+          <path d="M80 60 C 93 55, 101 45, 103 34 C 105 30, 110 32, 109 38 C 106 51, 96 63, 85 68 Z" fill="#1e293b"/>
+        </g>
+        <!-- Animated toy ball -->
+        <circle class="cat-toy-ball" cx="106" cy="26" r="9" fill="url(#mascotBallGradient3)"/>
+        <defs>
+          <radialGradient id="mascotBallGradient3" cx="35%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#fde68a"/>
+            <stop offset="35%" stop-color="#34d399"/>
+            <stop offset="70%" stop-color="#60a5fa"/>
+            <stop offset="100%" stop-color="#a78bfa"/>
+          </radialGradient>
+        </defs>
+      </svg>
+      Admin Panel - <span class="brand-text">Tailsandtoys</span>
+      </a>
+    </h1>
+
+    <!-- Login Screen -->
+    <div id="loginScreen">
+      <h2>Admin Login</h2>
+      <input type="password" id="adminPassword" placeholder="Enter Admin Password" style="max-width:280px;">
+      <button onclick="loginAdmin()" class="btn-primary">Login</button>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>Manage Products</h2>
+        <div style="display:flex; gap:10px;">
+          <a href="index.html" class="btn-outline">View Shop</a>
+          <button onclick="logoutAdmin()" class="btn-outline">Logout</button>
+        </div>
+      </div>
+
+      <!-- Add New Product Form -->
+      <div class="admin-form">
+        <h3 id="formTitle">Add New Product</h3>
+        <p class="form-hint">Only the product image is required — everything else is optional.</p>
+
+        <label for="prodCategory">Category</label>
+        <select id="prodCategory">
+          <option value="toys">Cat Toys</option>
+          <option value="accessories">Accessories</option>
+        </select>
+
+        <label for="prodImageFile">Product Images (required for new products — you can select multiple)</label>
+        <input type="file" id="prodImageFile" accept="image/*" multiple>
+        <div id="imagePreviewContainer" class="image-preview-grid"></div>
+        <p id="uploadStatus" style="font-size:0.85rem; color:#94a3b8; margin-top:6px;"></p>
+
+        <label for="prodName">Product Name</label>
+        <input type="text" id="prodName" placeholder="e.g. Interactive Feather Wand (optional)">
+
+        <label for="prodDescription">Description</label>
+        <textarea id="prodDescription" rows="3" placeholder="Describe the product, materials, what makes it special... (optional)"></textarea>
+
+        <label for="prodColors">Colors Available</label>
+        <input type="text" id="prodColors" placeholder="e.g. Red, Blue, Pink (optional)">
+
+        <label>Sizes &amp; Stock</label>
+        <p class="form-hint" style="margin-top:-4px;">Add one row per size variation. Leave "Size" as "Not specified" for a single, sizeless product.</p>
+        <div id="variationsContainer"></div>
+        <button type="button" onclick="addVariationRow()" class="btn-outline" style="margin-bottom: 14px;">+ Add Another Size</button>
+
+        <label for="prodPrice">Price (₦)</label>
+        <input type="number" id="prodPrice" placeholder="e.g. 8500 (optional)">
+
+        <label for="prodDiscount">Discount (%)</label>
+        <input type="number" id="prodDiscount" min="0" max="100" placeholder="e.g. 10 (optional)">
+
+        <label for="prodPriceUSD">Price in USD (for card checkout)</label>
+        <input type="number" step="0.01" id="prodPriceUSD" placeholder="e.g. 12.50 (optional)">
+
+        <div style="display:flex; gap:10px; margin-top: 14px;">
+          <button onclick="addProductAdmin()" class="btn-primary" id="submitProductBtn">Add Product</button>
+          <button onclick="cancelEdit()" class="btn-outline" id="cancelEditBtn" style="display:none;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Products List -->
+      <h3 style="margin-bottom: 1rem;">Your Added Products</h3>
+      <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
+        Note: the demo product ("Interactive Feather Wand") is always shown on the storefront under Cat Toys and isn't listed or removable here. Anything you add below appears on the shop alongside it, filterable by category.
+      </p>
+      <div id="adminProductsList"></div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "demo123";
+    // Fallback NGN -> USD rate, used if no USD price is entered for a product.
+    const NGN_TO_USD_RATE = 1500;
+
+    // Cloudinary unsigned upload config
+    const CLOUDINARY_CLOUD_NAME = "dv933cgea";
+    const CLOUDINARY_UPLOAD_PRESET = "tailsandtoys_products";
+
+    function loginAdmin() {
+      const pass = document.getElementById('adminPassword').value;
+      if (pass === ADMIN_PASSWORD) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminDashboard').style.display = 'block';
+        loadAdminProducts();
+      } else {
+        alert("Incorrect Password");
+      }
+    }
+
+    function logoutAdmin() {
+      document.getElementById('loginScreen').style.display = 'block';
+      document.getElementById('adminDashboard').style.display = 'none';
+      document.getElementById('adminPassword').value = '';
+    }
+
+    // Uploads an image file to Cloudinary (unsigned upload) and returns
+    // the hosted image URL.
+    async function uploadToCloudinary(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      return data.secure_url;
+    }
+
+    // Uploads multiple image files to Cloudinary and returns an array of
+    // hosted image URLs.
+    async function uploadMultipleToCloudinary(files) {
+      return Promise.all(Array.from(files).map(file => uploadToCloudinary(file)));
+    }
+
+    // Show live previews for all selected files
+    document.getElementById('prodImageFile').addEventListener('change', (e) => {
+      const files = e.target.files;
+      const container = document.getElementById('imagePreviewContainer');
+      container.innerHTML = '';
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = document.createElement('img');
+          img.src = ev.target.result;
+          img.className = 'image-preview-thumb';
+          container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // ===== Size variation rows =====
+    let variationRowCount = 0;
+
+    // Adds a new size/measurement/stock row to the variations list.
+    // Pass existing values when populating the form for editing.
+    function addVariationRow(values = {}) {
+      const container = document.getElementById('variationsContainer');
+      const rowId = `variationRow${variationRowCount++}`;
+
+      const row = document.createElement('div');
+      row.className = 'variation-row';
+      row.id = rowId;
+      row.innerHTML = `
+        <select class="variation-size">
+          <option value="">Not specified</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+        </select>
+        <input type="text" class="variation-measurement" placeholder="Measurement cm (optional)">
+        <input type="number" min="0" class="variation-stock" placeholder="Stock (optional)">
+        <button type="button" class="variation-remove" onclick="removeVariationRow('${rowId}')" aria-label="Remove size">✕</button>
+      `;
+      container.appendChild(row);
+
+      row.querySelector('.variation-size').value = values.size || '';
+      row.querySelector('.variation-measurement').value = values.measurement || '';
+      row.querySelector('.variation-stock').value = (values.stock === null || values.stock === undefined) ? '' : values.stock;
+
+      updateRemoveButtonsVisibility();
+    }
+    window.addVariationRow = addVariationRow;
+
+    // Removes a size row (always keeps at least one row)
+    function removeVariationRow(rowId) {
+      const row = document.getElementById(rowId);
+      if (row) row.remove();
+      if (document.getElementById('variationsContainer').children.length === 0) {
+        addVariationRow();
+      }
+      updateRemoveButtonsVisibility();
+    }
+    window.removeVariationRow = removeVariationRow;
+
+    // Hides the remove (✕) button when only one row remains
+    function updateRemoveButtonsVisibility() {
+      const rows = document.querySelectorAll('#variationsContainer .variation-row');
+      rows.forEach(row => {
+        row.querySelector('.variation-remove').style.display = rows.length > 1 ? 'inline-flex' : 'none';
+      });
+    }
+
+    // Reads all variation rows into a [{ size, measurement, stock }, ...] array
+    function collectVariations() {
+      const rows = document.querySelectorAll('#variationsContainer .variation-row');
+      return Array.from(rows).map(row => {
+        const size = row.querySelector('.variation-size').value;
+        const measurement = row.querySelector('.variation-measurement').value.trim();
+        const stockInput = row.querySelector('.variation-stock').value.trim();
+        const stock = stockInput !== '' ? Math.max(0, parseInt(stockInput)) : null;
+        return { size, measurement, stock };
+      });
+    }
+
+    // Clears all rows and adds a single blank one
+    function resetVariationRows() {
+      document.getElementById('variationsContainer').innerHTML = '';
+      addVariationRow();
+    }
+
+    // Tracks which product is currently being edited (null = adding new)
+    let editingProductId = null;
+    let editingProductImages = null;
+
+    async function addProductAdmin() {
+      const name = document.getElementById('prodName').value.trim() || "Untitled Product";
+      const description = document.getElementById('prodDescription').value.trim();
+      const colors = document.getElementById('prodColors').value.trim();
+      const variations = collectVariations();
+      const category = document.getElementById('prodCategory').value || "toys";
+
+      const priceInput = document.getElementById('prodPrice').value.trim();
+      const price = priceInput ? parseInt(priceInput) : 0;
+
+      const discountInput = document.getElementById('prodDiscount').value.trim();
+      let discount = discountInput ? parseInt(discountInput) : 0;
+      if (isNaN(discount) || discount < 0) discount = 0;
+      if (discount > 100) discount = 100;
+
+      const priceUSDInput = document.getElementById('prodPriceUSD').value.trim();
+      const priceUSD = priceUSDInput
+        ? parseFloat(priceUSDInput)
+        : (price ? Math.round((price / NGN_TO_USD_RATE) * 100) / 100 : 0);
+
+      const fileInput = document.getElementById('prodImageFile');
+      const files = fileInput.files;
+
+      // Images are required for new products, but optional when editing
+      // (existing images are kept unless new ones are chosen).
+      if (files.length === 0 && editingProductId === null) {
+        alert("Please choose at least one product image — that's the only required field.");
+        return;
+      }
+
+      const statusEl = document.getElementById('uploadStatus');
+      const submitBtn = document.getElementById('submitProductBtn');
+
+      let imagesData = editingProductImages;
+
+      if (files.length > 0) {
+        try {
+          statusEl.textContent = `Uploading ${files.length} image${files.length > 1 ? 's' : ''}...`;
+          submitBtn.disabled = true;
+          imagesData = await uploadMultipleToCloudinary(files);
+          statusEl.textContent = '';
+        } catch (err) {
+          statusEl.textContent = '';
+          submitBtn.disabled = false;
+          alert("Image upload failed. Please check your connection and try again.");
+          return;
+        }
+      }
+      submitBtn.disabled = false;
+
+      let products = JSON.parse(localStorage.getItem('products')) || [];
+
+      if (editingProductId !== null) {
+        // Update existing product, preserving its hidden state
+        const index = products.findIndex(p => p.id === editingProductId);
+        if (index !== -1) {
+          products[index] = {
+            ...products[index],
+            name, description, colors, price, priceUSD, discount, variations,
+            images: imagesData, category
+          };
+          // Remove old single-size fields if present, now superseded by "variations"
+          delete products[index].size;
+          delete products[index].measurement;
+          delete products[index].stock;
+        }
+        alert("Product updated successfully!");
+      } else {
+        products.push({
+          id: Date.now(),
+          name, description, colors, price, priceUSD, discount, variations,
+          images: imagesData, category, hidden: false
+        });
+        alert("Product added successfully!");
+      }
+
+      localStorage.setItem('products', JSON.stringify(products));
+      cancelEdit(); // clears form and resets edit state
+      loadAdminProducts();
+    }
+
+    // Populates the form with an existing product's data for editing
+    function editProduct(id) {
+      let products = JSON.parse(localStorage.getItem('products')) || [];
+      const p = products.find(prod => prod.id === id);
+      if (!p) return;
+
+      editingProductId = p.id;
+      editingProductImages = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+
+      document.getElementById('prodCategory').value = p.category || 'toys';
+      document.getElementById('prodName').value = p.name || '';
+      document.getElementById('prodDescription').value = p.description || '';
+      document.getElementById('prodColors').value = p.colors || '';
+      document.getElementById('prodPrice').value = p.price || '';
+      document.getElementById('prodDiscount').value = p.discount || '';
+      document.getElementById('prodPriceUSD').value = p.priceUSD || '';
+
+      // Populate size/stock rows from variations, or fall back to
+      // older single-size fields for products saved before this feature.
+      document.getElementById('variationsContainer').innerHTML = '';
+      const variations = (p.variations && p.variations.length)
+        ? p.variations
+        : [{ size: p.size || '', measurement: p.measurement || '', stock: (p.stock === undefined ? null : p.stock) }];
+      variations.forEach(v => addVariationRow(v));
+
+      const previewContainer = document.getElementById('imagePreviewContainer');
+      previewContainer.innerHTML = '';
+      editingProductImages.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'image-preview-thumb';
+        previewContainer.appendChild(img);
+      });
+
+      document.getElementById('formTitle').textContent = 'Edit Product';
+      document.getElementById('submitProductBtn').textContent = 'Update Product';
+      document.getElementById('cancelEditBtn').style.display = 'inline-block';
+      document.getElementById('prodImageFile').removeAttribute('required');
+      document.getElementById('uploadStatus').textContent =
+        'Current images shown below. Choosing new files will replace all of them.';
+
+      document.querySelector('.admin-form').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Clears the form and exits edit mode
+    function cancelEdit() {
+      editingProductId = null;
+      editingProductImages = null;
+
+      document.getElementById('prodName').value = '';
+      document.getElementById('prodDescription').value = '';
+      document.getElementById('prodColors').value = '';
+      document.getElementById('prodPrice').value = '';
+      document.getElementById('prodDiscount').value = '';
+      document.getElementById('prodPriceUSD').value = '';
+      document.getElementById('prodCategory').value = 'toys';
+      document.getElementById('prodImageFile').value = '';
+      document.getElementById('imagePreviewContainer').innerHTML = '';
+      document.getElementById('uploadStatus').textContent = '';
+      resetVariationRows();
+
+      document.getElementById('formTitle').textContent = 'Add New Product';
+      document.getElementById('submitProductBtn').textContent = 'Add Product';
+      document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+    window.cancelEdit = cancelEdit;
+    window.editProduct = editProduct;
+
+    const CATEGORY_LABELS = { toys: "Cat Toys", accessories: "Accessories" };
+
+    function loadAdminProducts() {
+      const container = document.getElementById('adminProductsList');
+      let products = JSON.parse(localStorage.getItem('products')) || [];
+
+      if (products.length === 0) {
+        container.innerHTML = "<p>No additional products added yet.</p>";
+        return;
+      }
+
+      container.innerHTML = products.map(p => {
+        const priceText = p.price ? `₦${p.price.toLocaleString()}` : 'Price on request';
+        const discountText = p.discount ? ` • ${p.discount}% off` : '';
+        const categoryLabel = CATEGORY_LABELS[p.category] || p.category || 'Cat Toys';
+
+        const variations = (p.variations && p.variations.length)
+          ? p.variations
+          : [{ size: p.size || '', measurement: p.measurement || '', stock: (p.stock === undefined ? null : p.stock) }];
+
+        const stockControls = variations.map((v, i) => {
+          const label = v.size ? `<span class="stock-size-label">${v.size}:</span>` : (variations.length > 1 ? `<span class="stock-size-label">Option ${i + 1}:</span>` : '');
+          const tracked = v.stock !== null && v.stock !== undefined;
+          return tracked
+            ? `<div class="stock-controls">
+                 ${label}
+                 <button onclick="adjustStock(${p.id}, ${i}, -1)" aria-label="Decrease stock">–</button>
+                 <span class="stock-value">${v.stock}</span>
+                 <button onclick="adjustStock(${p.id}, ${i}, 1)" aria-label="Increase stock">+</button>
+               </div>`
+            : `<div class="stock-controls">${label}<span class="stock-unlimited">Unlimited stock</span></div>`;
+        }).join('');
+
+        const thumbSrc = (p.images && p.images[0]) || p.image || '';
+        const imageCount = (p.images && p.images.length) || (p.image ? 1 : 0);
+
+        return `
+        <div class="admin-product-item ${p.hidden ? 'hidden-product' : ''}">
+          <img src="${thumbSrc}" alt="${p.name}" style="width:70px; height:70px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/70x70/bfdbfe/1e40af?text=Cat'">
+          <div>
+            <strong>${p.name}</strong>${p.hidden ? ' <span class="hidden-tag">Hidden</span>' : ''}<br>
+            ${priceText}${discountText} • ${categoryLabel}${imageCount > 1 ? ` • ${imageCount} images` : ''}<br>
+            ${stockControls}
+          </div>
+          <div class="admin-item-actions">
+            <button onclick="editProduct(${p.id})" class="action-btn edit-btn">Edit</button>
+            <button onclick="toggleHidden(${p.id})" class="action-btn hide-btn">${p.hidden ? 'Show' : 'Hide'}</button>
+            <button onclick="deleteProduct(${p.id})" class="action-btn delete-btn">Delete</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    // Adjusts a product's stock count by +1 or -1 (won't go below 0)
+    function adjustStock(id, variationIndex, delta) {
+      let products = JSON.parse(localStorage.getItem('products')) || [];
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+
+      // Normalize older single-size products on the fly
+      if (!product.variations || !product.variations.length) {
+        product.variations = [{ size: product.size || '', measurement: product.measurement || '', stock: (product.stock === undefined ? null : product.stock) }];
+        delete product.size;
+        delete product.measurement;
+        delete product.stock;
+      }
+
+      const variation = product.variations[variationIndex];
+      if (!variation || variation.stock === null || variation.stock === undefined) return;
+
+      variation.stock = Math.max(0, (Number(variation.stock) || 0) + delta);
+      localStorage.setItem('products', JSON.stringify(products));
+      loadAdminProducts();
+    }
+    window.adjustStock = adjustStock;
+
+    // Shows/hides a product on the storefront without deleting it
+    function toggleHidden(id) {
+      let products = JSON.parse(localStorage.getItem('products')) || [];
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+
+      product.hidden = !product.hidden;
+      localStorage.setItem('products', JSON.stringify(products));
+      loadAdminProducts();
+    }
+    window.toggleHidden = toggleHidden;
+
+    function deleteProduct(id) {
+      if (confirm("Delete this product?")) {
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem('products', JSON.stringify(products));
+
+        // If the deleted product was open in the edit form, reset it
+        if (editingProductId === id) {
+          cancelEdit();
+        }
+
+        loadAdminProducts();
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Start with one blank size/stock row
+      addVariationRow();
+    });
+  </script>
+</body>
+</html>

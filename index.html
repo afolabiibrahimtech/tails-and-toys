@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tails & Toys LLC • Premium Cat Toys & Accessories</title>
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="alternate icon" href="images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="index.html" class="logo-link">
+        <svg class="cat-mascot" width="46" height="46" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Tail -->
+          <path d="M35 85 C 8 85, 2 48, 24 33 C 30 29, 37 36, 31 44 C 20 55, 24 76, 40 79 Z" fill="#1e293b"/>
+          <!-- Back legs -->
+          <ellipse cx="46" cy="98" rx="11" ry="7" fill="#1e293b"/>
+          <ellipse cx="70" cy="98" rx="11" ry="7" fill="#1e293b"/>
+          <!-- Body -->
+          <ellipse cx="58" cy="80" rx="27" ry="21" fill="#1e293b"/>
+          <!-- Head -->
+          <circle cx="79" cy="52" r="16" fill="#1e293b"/>
+          <!-- Ears -->
+          <path d="M69 41 L64 28 L78 39 Z" fill="#1e293b"/>
+          <path d="M90 41 L97 27 L82 38 Z" fill="#1e293b"/>
+          <!-- Animated paw swiping at the ball -->
+          <g class="cat-paw">
+            <path d="M80 60 C 93 55, 101 45, 103 34 C 105 30, 110 32, 109 38 C 106 51, 96 63, 85 68 Z" fill="#1e293b"/>
+          </g>
+          <!-- Animated toy ball -->
+          <circle class="cat-toy-ball" cx="106" cy="26" r="9" fill="url(#mascotBallGradient)"/>
+          <defs>
+            <radialGradient id="mascotBallGradient" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#fde68a"/>
+              <stop offset="35%" stop-color="#34d399"/>
+              <stop offset="70%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#a78bfa"/>
+            </radialGradient>
+          </defs>
+        </svg>
+        <h1><span class="brand-text">Tailsandtoys</span></h1>
+        </a>
+      </div>
+      <div class="nav-links">
+        <a href="#shop" onclick="filterProducts('all')">Shop</a>
+        <div class="dropdown">
+          <button class="dropdown-toggle" type="button">Categories</button>
+          <div class="dropdown-menu">
+            <a href="#shop" onclick="filterProducts('toys')">Cat Toys</a>
+            <a href="#shop" onclick="filterProducts('accessories')">Accessories</a>
+          </div>
+        </div>
+        <a href="#about">About</a>
+      </div>
+      <div class="nav-actions">
+        <button id="cartBtn" class="cart-btn" aria-label="Open cart">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/>
+            <circle cx="20" cy="21" r="1"/>
+            <path d="M7 7h14l-1.5 9h-11L7 7z"/>
+            <path d="M3 3h2l.5 3"/>
+          </svg>
+          <span id="cartCount" class="cart-count">0</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Happy Cats, <span class="highlight">Happy Homes</span></h1>
+      <p>Premium toys, scratching posts & accessories for your feline friends</p>
+      <a href="#shop" class="btn-primary">Shop Now</a>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  <section id="shop" class="featured">
+    <h2>Featured Products</h2>
+    <div class="category-filters" id="categoryFilters">
+      <button class="filter-btn active" data-category="all" onclick="filterProducts('all')">All</button>
+      <button class="filter-btn" data-category="toys" onclick="filterProducts('toys')">Cat Toys</button>
+      <button class="filter-btn" data-category="accessories" onclick="filterProducts('accessories')">Accessories</button>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="about-section">
+    <h2>About Tails & Toys LLC</h2>
+    <p>We are passionate about enriching the lives of cats and their humans. Every product is carefully selected for quality, safety, and fun. From interactive toys to cozy beds, we bring only the best for your furry companions.</p>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Tails & Toys LLC • Built with care for cats</p>
+  </footer>
+
+  <!-- Cart Overlay (click to close cart) -->
+  <div id="cartOverlay" class="cart-overlay"></div>
+
+  <!-- Mini Cart Sidebar -->
+  <div id="cartSidebar" class="cart-sidebar">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button onclick="closeCart()" class="close-btn" aria-label="Close cart">✕</button>
+    </div>
+    <div id="cartItems" class="cart-items"></div>
+    <div class="cart-total">
+      <span>Total</span>
+      <span id="cartTotal">₦0</span>
+    </div>
+    <a href="cart.html" class="btn-outline full-width" style="text-align:center; margin-bottom: 10px;">View Full Cart</a>
+    <button onclick="checkoutInstagram()" class="btn-primary full-width">Checkout via Instagram</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

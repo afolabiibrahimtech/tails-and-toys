@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart - Tails & Toys LLC</title>
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="alternate icon" href="images/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="index.html" class="logo-link">
+        <svg class="cat-mascot" width="46" height="46" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Tail -->
+          <path d="M35 85 C 8 85, 2 48, 24 33 C 30 29, 37 36, 31 44 C 20 55, 24 76, 40 79 Z" fill="#1e293b"/>
+          <!-- Back legs -->
+          <ellipse cx="46" cy="98" rx="11" ry="7" fill="#1e293b"/>
+          <ellipse cx="70" cy="98" rx="11" ry="7" fill="#1e293b"/>
+          <!-- Body -->
+          <ellipse cx="58" cy="80" rx="27" ry="21" fill="#1e293b"/>
+          <!-- Head -->
+          <circle cx="79" cy="52" r="16" fill="#1e293b"/>
+          <!-- Ears -->
+          <path d="M69 41 L64 28 L78 39 Z" fill="#1e293b"/>
+          <path d="M90 41 L97 27 L82 38 Z" fill="#1e293b"/>
+          <!-- Animated paw swiping at the ball -->
+          <g class="cat-paw">
+            <path d="M80 60 C 93 55, 101 45, 103 34 C 105 30, 110 32, 109 38 C 106 51, 96 63, 85 68 Z" fill="#1e293b"/>
+          </g>
+          <!-- Animated toy ball -->
+          <circle class="cat-toy-ball" cx="106" cy="26" r="9" fill="url(#mascotBallGradient2)"/>
+          <defs>
+            <radialGradient id="mascotBallGradient2" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#fde68a"/>
+              <stop offset="35%" stop-color="#34d399"/>
+              <stop offset="70%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#a78bfa"/>
+            </radialGradient>
+          </defs>
+        </svg>
+        <h1><span class="brand-text">Tailsandtoys</span></h1>
+        </a>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Shop</a>
+        <a href="index.html#about">About</a>
+      </div>
+      <div class="nav-actions">
+        <a href="index.html" class="btn-outline">← Continue Shopping</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="cart-page">
+    <div class="cart-container">
+      <h1>Your Cart</h1>
+
+      <div id="cartItems" class="cart-items"></div>
+
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="subtotal">₦0</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="total">₦0</span>
+        </div>
+        <div class="summary-row usd-total">
+          <span>Card payment total (USD)</span>
+          <span id="totalUSD">$0.00</span>
+        </div>
+      </div>
+
+      <div class="cart-actions">
+        <button onclick="clearCart()" class="btn-outline">Clear Cart</button>
+        <button onclick="checkoutStripe()" class="btn-primary" id="stripeBtn">Pay with Card (Stripe)</button>
+      </div>
+      <div class="cart-actions secondary-action">
+        <button onclick="checkoutInstagram()" class="btn-outline full-width">Or Order via Instagram</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Tails & Toys LLC</p>
+  </footer>
+
+  <script>
+    // TODO: Replace with your deployed Firebase Functions base URL, e.g.
+    // "https://us-central1-your-project-id.cloudfunctions.net"
+    const FUNCTIONS_BASE_URL = "https://us-central1-YOUR-PROJECT-ID.cloudfunctions.net";
+
+    // Fallback NGN -> USD rate for any cart items saved before priceUSD existed.
+    const NGN_TO_USD_RATE = 1500;
+
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function itemPriceUSD(item) {
+      return item.priceUSD != null ? item.priceUSD : item.price / NGN_TO_USD_RATE;
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartItems');
+      container.innerHTML = '';
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="empty-cart">
+            <h2>Your cart is empty 🛒</h2>
+            <a href="index.html" class="btn-primary">Start Shopping</a>
+          </div>`;
+        updateTotals();
+        return;
+      }
+
+      cart.forEach((item, index) => {
+        const itemHTML = `
+          <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80x80/bfdbfe/1e40af?text=Cat'">
+            <div class="item-details">
+              <h3>${item.name}</h3>
+              <p class="price">₦${item.price.toLocaleString()}</p>
+            </div>
+            <div class="quantity-controls">
+              <button onclick="changeQuantity(${index}, -1)">–</button>
+              <span>${item.quantity}</span>
+              <button onclick="changeQuantity(${index}, 1)">+</button>
+            </div>
+            <div class="item-total">₦${(item.price * item.quantity).toLocaleString()}</div>
+            <button onclick="removeFromCart(${index})" class="remove-btn">🗑</button>
+          </div>`;
+        container.innerHTML += itemHTML;
+      });
+
+      updateTotals();
+    }
+
+    function changeQuantity(index, change) {
+      cart[index].quantity += change;
+      if (cart[index].quantity < 1) cart[index].quantity = 1;
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
+    }
+
+    function updateTotals() {
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const subtotalUSD = cart.reduce((sum, item) => sum + (itemPriceUSD(item) * item.quantity), 0);
+      document.getElementById('subtotal').textContent = `₦${subtotal.toLocaleString()}`;
+      document.getElementById('total').textContent = `₦${subtotal.toLocaleString()}`;
+      document.getElementById('totalUSD').textContent = `$${subtotalUSD.toFixed(2)}`;
+    }
+
+    function clearCart() {
+      if (confirm("Clear entire cart?")) {
+        cart = [];
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+      }
+    }
+
+    const INSTAGRAM_USERNAME = "tailsandtoysllc";
+
+    function checkoutInstagram() {
+      if (cart.length === 0) return;
+
+      let message = "🛍️ New Order from Tails & Toys\n\n";
+      cart.forEach(item => {
+        message += `${item.name} × ${item.quantity} = ₦${(item.price * item.quantity).toLocaleString()}\n`;
+      });
+      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      message += `\nTotal: ₦${total.toLocaleString()}\n\nPlease confirm my order!`;
+
+      // Instagram DMs don't support pre-filled message text via link, so we
+      // copy the order details to the clipboard and let the customer paste
+      // them into the chat that opens.
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(message).catch(() => {});
+      }
+
+      alert("Your order details have been copied!\nPaste them into the Instagram DM that opens, then send.");
+
+      window.open(`https://ig.me/m/${INSTAGRAM_USERNAME}`, '_blank');
+    }
+
+    // Card checkout via Stripe (handled by a Firebase Cloud Function)
+    async function checkoutStripe() {
+      if (cart.length === 0) {
+        alert("Your cart is empty 🛒");
+        return;
+      }
+
+      const btn = document.getElementById('stripeBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Redirecting to checkout...";
+
+      try {
+        const payload = {
+          cart: cart.map(item => ({
+            name: item.name,
+            priceUSD: itemPriceUSD(item),
+            quantity: item.quantity
+          })),
+          origin: window.location.origin
+        };
+
+        const res = await fetch(`${FUNCTIONS_BASE_URL}/createCheckoutSession`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert(data.error || "Could not start checkout. Please try again.");
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Could not reach checkout. Please check your connection and try again.");
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', renderCart);
+  </script>
+</body>
+</html>
