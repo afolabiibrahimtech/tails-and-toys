@@ -67,15 +67,11 @@
       <div class="cart-summary">
         <div class="summary-row">
           <span>Subtotal</span>
-          <span id="subtotal">₦0</span>
+          <span id="subtotal">$0.00</span>
         </div>
         <div class="summary-row total">
           <span>Total</span>
-          <span id="total">₦0</span>
-        </div>
-        <div class="summary-row usd-total">
-          <span>Card payment total (USD)</span>
-          <span id="totalUSD">$0.00</span>
+          <span id="total">$0.00</span>
         </div>
       </div>
 
@@ -98,14 +94,7 @@
     // "https://us-central1-your-project-id.cloudfunctions.net"
     const FUNCTIONS_BASE_URL = "https://us-central1-YOUR-PROJECT-ID.cloudfunctions.net";
 
-    // Fallback NGN -> USD rate for any cart items saved before priceUSD existed.
-    const NGN_TO_USD_RATE = 1500;
-
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-    function itemPriceUSD(item) {
-      return item.priceUSD != null ? item.priceUSD : item.price / NGN_TO_USD_RATE;
-    }
 
     function renderCart() {
       const container = document.getElementById('cartItems');
@@ -114,7 +103,13 @@
       if (cart.length === 0) {
         container.innerHTML = `
           <div class="empty-cart">
-            <h2>Your cart is empty 🛒</h2>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M7 7h14l-1.5 9h-11L7 7z"/>
+              <path d="M3 3h2l.5 3"/>
+            </svg>
+            <h2>Your cart is empty</h2>
             <a href="index.html" class="btn-primary">Start Shopping</a>
           </div>`;
         updateTotals();
@@ -126,16 +121,24 @@
           <div class="cart-item">
             <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80x80/bfdbfe/1e40af?text=Cat'">
             <div class="item-details">
-              <h3>${item.name}</h3>
-              <p class="price">₦${item.price.toLocaleString()}</p>
+              <h3>${item.name}${[item.size, item.color].filter(Boolean).length ? ` <span class="item-size">(${[item.size, item.color].filter(Boolean).join(', ')})</span>` : ''}</h3>
+              <p class="price">$${item.price.toFixed(2)}</p>
             </div>
             <div class="quantity-controls">
               <button onclick="changeQuantity(${index}, -1)">–</button>
               <span>${item.quantity}</span>
               <button onclick="changeQuantity(${index}, 1)">+</button>
             </div>
-            <div class="item-total">₦${(item.price * item.quantity).toLocaleString()}</div>
-            <button onclick="removeFromCart(${index})" class="remove-btn">🗑</button>
+            <div class="item-total">$${(item.price * item.quantity).toFixed(2)}</div>
+            <button onclick="removeFromCart(${index})" class="remove-btn" aria-label="Remove item">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6"/>
+                <path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
           </div>`;
         container.innerHTML += itemHTML;
       });
@@ -158,10 +161,8 @@
 
     function updateTotals() {
       const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const subtotalUSD = cart.reduce((sum, item) => sum + (itemPriceUSD(item) * item.quantity), 0);
-      document.getElementById('subtotal').textContent = `₦${subtotal.toLocaleString()}`;
-      document.getElementById('total').textContent = `₦${subtotal.toLocaleString()}`;
-      document.getElementById('totalUSD').textContent = `$${subtotalUSD.toFixed(2)}`;
+      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${subtotal.toFixed(2)}`;
     }
 
     function clearCart() {
@@ -179,10 +180,12 @@
 
       let message = "🛍️ New Order from Tails & Toys\n\n";
       cart.forEach(item => {
-        message += `${item.name} × ${item.quantity} = ₦${(item.price * item.quantity).toLocaleString()}\n`;
+        const details = [item.size, item.color].filter(Boolean).join(', ');
+        const label = details ? `${item.name} (${details})` : item.name;
+        message += `${label} × ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}\n`;
       });
       const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      message += `\nTotal: ₦${total.toLocaleString()}\n\nPlease confirm my order!`;
+      message += `\nTotal: $${total.toFixed(2)}\n\nPlease confirm my order!`;
 
       // Instagram DMs don't support pre-filled message text via link, so we
       // copy the order details to the clipboard and let the customer paste
@@ -212,7 +215,7 @@
         const payload = {
           cart: cart.map(item => ({
             name: item.name,
-            priceUSD: itemPriceUSD(item),
+            priceUSD: item.price,
             quantity: item.quantity
           })),
           origin: window.location.origin

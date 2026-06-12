@@ -64,8 +64,14 @@
         </div>
       </div>
 
+      <!-- Tab Navigation -->
+      <div class="admin-tabs">
+        <button type="button" class="admin-tab active" id="tabAddProduct" onclick="showAdminTab('add')">Add Product</button>
+        <button type="button" class="admin-tab" id="tabInventory" onclick="showAdminTab('inventory')">Inventory</button>
+      </div>
+
       <!-- Add New Product Form -->
-      <div class="admin-form">
+      <div class="admin-form" id="addProductView">
         <h3 id="formTitle">Add New Product</h3>
         <p class="form-hint">Only the product image is required — everything else is optional.</p>
 
@@ -86,22 +92,24 @@
         <label for="prodDescription">Description</label>
         <textarea id="prodDescription" rows="3" placeholder="Describe the product, materials, what makes it special... (optional)"></textarea>
 
-        <label for="prodColors">Colors Available</label>
-        <input type="text" id="prodColors" placeholder="e.g. Red, Blue, Pink (optional)">
-
-        <label>Sizes &amp; Stock</label>
-        <p class="form-hint" style="margin-top:-4px;">Add one row per size variation. Leave "Size" as "Not specified" for a single, sizeless product.</p>
+        <label>Size, Color &amp; Unit</label>
+        <p class="form-hint" style="margin-top:-4px;">Add one row per size + color combination you stock, with how many units you have (e.g. S Green 1, S Blue 2). Leave Size and/or Color blank if not needed.</p>
         <div id="variationsContainer"></div>
-        <button type="button" onclick="addVariationRow()" class="btn-outline" style="margin-bottom: 14px;">+ Add Another Size</button>
+        <button type="button" onclick="addVariationRow()" class="btn-outline" style="margin-bottom: 14px;">+ Add Another Size/Color</button>
 
-        <label for="prodPrice">Price (₦)</label>
-        <input type="number" id="prodPrice" placeholder="e.g. 8500 (optional)">
+        <label>Color-Specific Images (optional)</label>
+        <p class="form-hint" style="margin-top:-4px;">By default every color shows the same Product Images above. If a color (e.g. "Blue") should show its own photos instead, add it here with its own image(s). Colors left out just use the default images.</p>
+        <div id="colorImagesContainer"></div>
+        <button type="button" onclick="addColorImageRow()" class="btn-outline" style="margin-bottom: 14px;">+ Add Color Images</button>
+
+        <label for="prodMeasurement">Measurement (cm)</label>
+        <input type="text" id="prodMeasurement" placeholder="e.g. 45 x 5 x 5 (optional)">
+
+        <label for="prodPrice">Price ($)</label>
+        <input type="number" step="0.01" id="prodPrice" placeholder="e.g. 8.50 (optional)">
 
         <label for="prodDiscount">Discount (%)</label>
         <input type="number" id="prodDiscount" min="0" max="100" placeholder="e.g. 10 (optional)">
-
-        <label for="prodPriceUSD">Price in USD (for card checkout)</label>
-        <input type="number" step="0.01" id="prodPriceUSD" placeholder="e.g. 12.50 (optional)">
 
         <div style="display:flex; gap:10px; margin-top: 14px;">
           <button onclick="addProductAdmin()" class="btn-primary" id="submitProductBtn">Add Product</button>
@@ -109,19 +117,19 @@
         </div>
       </div>
 
-      <!-- Products List -->
-      <h3 style="margin-bottom: 1rem;">Your Added Products</h3>
-      <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
-        Note: the demo product ("Interactive Feather Wand") is always shown on the storefront under Cat Toys and isn't listed or removable here. Anything you add below appears on the shop alongside it, filterable by category.
-      </p>
-      <div id="adminProductsList"></div>
+      <!-- Inventory -->
+      <div id="inventoryView" style="display:none;">
+        <h3 style="margin-bottom: 1rem;">Inventory</h3>
+        <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
+          Note: the demo product ("Interactive Feather Wand") is always shown on the storefront under Cat Toys and isn't listed or removable here. Anything you add appears here and on the shop, filterable by category.
+        </p>
+        <div id="adminProductsList"></div>
+      </div>
     </div>
   </div>
 
   <script>
     const ADMIN_PASSWORD = "demo123";
-    // Fallback NGN -> USD rate, used if no USD price is entered for a product.
-    const NGN_TO_USD_RATE = 1500;
 
     // Cloudinary unsigned upload config
     const CLOUDINARY_CLOUD_NAME = "dv933cgea";
@@ -132,6 +140,7 @@
       if (pass === ADMIN_PASSWORD) {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminDashboard').style.display = 'block';
+        showAdminTab('add');
         loadAdminProducts();
       } else {
         alert("Incorrect Password");
@@ -143,6 +152,20 @@
       document.getElementById('adminDashboard').style.display = 'none';
       document.getElementById('adminPassword').value = '';
     }
+
+    // Switches between the "Add Product" form and the "Inventory" list
+    function showAdminTab(tab) {
+      const showAdd = tab === 'add';
+      document.getElementById('addProductView').style.display = showAdd ? 'block' : 'none';
+      document.getElementById('inventoryView').style.display = showAdd ? 'none' : 'block';
+      document.getElementById('tabAddProduct').classList.toggle('active', showAdd);
+      document.getElementById('tabInventory').classList.toggle('active', !showAdd);
+
+      if (!showAdd) {
+        loadAdminProducts();
+      }
+    }
+    window.showAdminTab = showAdminTab;
 
     // Uploads an image file to Cloudinary (unsigned upload) and returns
     // the hosted image URL.
@@ -201,27 +224,27 @@
       row.className = 'variation-row';
       row.id = rowId;
       row.innerHTML = `
-        <select class="variation-size">
-          <option value="">Not specified</option>
+        <select class="variation-size" aria-label="Size">
+          <option value="">No size</option>
           <option value="S">S</option>
           <option value="M">M</option>
           <option value="L">L</option>
         </select>
-        <input type="text" class="variation-measurement" placeholder="Measurement cm (optional)">
-        <input type="number" min="0" class="variation-stock" placeholder="Stock (optional)">
-        <button type="button" class="variation-remove" onclick="removeVariationRow('${rowId}')" aria-label="Remove size">✕</button>
+        <input type="text" class="variation-color" placeholder="Color (optional)" aria-label="Color">
+        <input type="number" min="0" class="variation-stock" placeholder="Unit" aria-label="Unit">
+        <button type="button" class="variation-remove" onclick="removeVariationRow('${rowId}')" aria-label="Remove row">✕</button>
       `;
       container.appendChild(row);
 
       row.querySelector('.variation-size').value = values.size || '';
-      row.querySelector('.variation-measurement').value = values.measurement || '';
+      row.querySelector('.variation-color').value = values.color || '';
       row.querySelector('.variation-stock').value = (values.stock === null || values.stock === undefined) ? '' : values.stock;
 
       updateRemoveButtonsVisibility();
     }
     window.addVariationRow = addVariationRow;
 
-    // Removes a size row (always keeps at least one row)
+    // Removes a row (always keeps at least one row)
     function removeVariationRow(rowId) {
       const row = document.getElementById(rowId);
       if (row) row.remove();
@@ -240,15 +263,15 @@
       });
     }
 
-    // Reads all variation rows into a [{ size, measurement, stock }, ...] array
+    // Reads all variation rows into a [{ size, color, stock }, ...] array
     function collectVariations() {
       const rows = document.querySelectorAll('#variationsContainer .variation-row');
       return Array.from(rows).map(row => {
         const size = row.querySelector('.variation-size').value;
-        const measurement = row.querySelector('.variation-measurement').value.trim();
+        const color = row.querySelector('.variation-color').value.trim();
         const stockInput = row.querySelector('.variation-stock').value.trim();
         const stock = stockInput !== '' ? Math.max(0, parseInt(stockInput)) : null;
-        return { size, measurement, stock };
+        return { size, color, stock };
       });
     }
 
@@ -258,6 +281,99 @@
       addVariationRow();
     }
 
+    // ===== Optional per-color image rows =====
+    let colorImageRowCount = 0;
+
+    // Adds a row for assigning specific images to one color. Pass
+    // { color, images: [...] } when populating the form for editing.
+    function addColorImageRow(values = {}) {
+      const container = document.getElementById('colorImagesContainer');
+      const rowId = `colorImageRow${colorImageRowCount++}`;
+
+      const row = document.createElement('div');
+      row.className = 'color-image-row';
+      row.id = rowId;
+      row.dataset.existingImages = JSON.stringify(values.images || []);
+      row.innerHTML = `
+        <div class="color-image-row-top">
+          <input type="text" class="color-image-color" placeholder="Color name (e.g. Blue)">
+          <input type="file" class="color-image-files" accept="image/*" multiple>
+          <button type="button" class="variation-remove" onclick="removeColorImageRow('${rowId}')" aria-label="Remove color images">✕</button>
+        </div>
+        <div class="image-preview-grid color-image-preview"></div>
+      `;
+      container.appendChild(row);
+
+      row.querySelector('.color-image-color').value = values.color || '';
+
+      // Show existing images as previews (for editing)
+      const previewEl = row.querySelector('.color-image-preview');
+      (values.images || []).forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'image-preview-thumb';
+        previewEl.appendChild(img);
+      });
+
+      // Selecting new files replaces the previews (and will replace the
+      // images saved for this color when the form is submitted)
+      row.querySelector('.color-image-files').addEventListener('change', (e) => {
+        previewEl.innerHTML = '';
+        Array.from(e.target.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const img = document.createElement('img');
+            img.src = ev.target.result;
+            img.className = 'image-preview-thumb';
+            previewEl.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+    window.addColorImageRow = addColorImageRow;
+
+    function removeColorImageRow(rowId) {
+      const row = document.getElementById(rowId);
+      if (row) row.remove();
+    }
+    window.removeColorImageRow = removeColorImageRow;
+
+    // Reads all color-image rows, uploading any newly chosen files, and
+    // returns a { colorName: [imageUrls], ... } map. Colors with no name
+    // or no images (new or existing) are skipped.
+    async function collectColorImages() {
+      const rows = document.querySelectorAll('#colorImagesContainer .color-image-row');
+      const result = {};
+
+      for (const row of rows) {
+        const color = row.querySelector('.color-image-color').value.trim();
+        if (!color) continue;
+
+        const fileInput = row.querySelector('.color-image-files');
+        let images;
+
+        if (fileInput.files.length > 0) {
+          images = await uploadMultipleToCloudinary(fileInput.files);
+        } else {
+          try {
+            images = JSON.parse(row.dataset.existingImages || '[]');
+          } catch (e) {
+            images = [];
+          }
+        }
+
+        if (images.length > 0) result[color] = images;
+      }
+
+      return result;
+    }
+
+    // Clears all color-image rows
+    function resetColorImageRows() {
+      document.getElementById('colorImagesContainer').innerHTML = '';
+    }
+
     // Tracks which product is currently being edited (null = adding new)
     let editingProductId = null;
     let editingProductImages = null;
@@ -265,22 +381,17 @@
     async function addProductAdmin() {
       const name = document.getElementById('prodName').value.trim() || "Untitled Product";
       const description = document.getElementById('prodDescription').value.trim();
-      const colors = document.getElementById('prodColors').value.trim();
       const variations = collectVariations();
+      const measurement = document.getElementById('prodMeasurement').value.trim();
       const category = document.getElementById('prodCategory').value || "toys";
 
       const priceInput = document.getElementById('prodPrice').value.trim();
-      const price = priceInput ? parseInt(priceInput) : 0;
+      const price = priceInput ? parseFloat(priceInput) : 0;
 
       const discountInput = document.getElementById('prodDiscount').value.trim();
       let discount = discountInput ? parseInt(discountInput) : 0;
       if (isNaN(discount) || discount < 0) discount = 0;
       if (discount > 100) discount = 100;
-
-      const priceUSDInput = document.getElementById('prodPriceUSD').value.trim();
-      const priceUSD = priceUSDInput
-        ? parseFloat(priceUSDInput)
-        : (price ? Math.round((price / NGN_TO_USD_RATE) * 100) / 100 : 0);
 
       const fileInput = document.getElementById('prodImageFile');
       const files = fileInput.files;
@@ -296,19 +407,32 @@
       const submitBtn = document.getElementById('submitProductBtn');
 
       let imagesData = editingProductImages;
+      let colorImagesData;
 
-      if (files.length > 0) {
-        try {
+      try {
+        submitBtn.disabled = true;
+        if (files.length > 0) {
           statusEl.textContent = `Uploading ${files.length} image${files.length > 1 ? 's' : ''}...`;
-          submitBtn.disabled = true;
           imagesData = await uploadMultipleToCloudinary(files);
-          statusEl.textContent = '';
-        } catch (err) {
-          statusEl.textContent = '';
-          submitBtn.disabled = false;
-          alert("Image upload failed. Please check your connection and try again.");
-          return;
         }
+
+        const colorRows = document.querySelectorAll('#colorImagesContainer .color-image-row');
+        const hasNewColorFiles = Array.from(colorRows).some(row => row.querySelector('.color-image-files').files.length > 0);
+        if (colorRows.length > 0) {
+          if (hasNewColorFiles) {
+            statusEl.textContent = 'Uploading color-specific images...';
+          }
+          colorImagesData = await collectColorImages();
+        } else {
+          colorImagesData = {};
+        }
+
+        statusEl.textContent = '';
+      } catch (err) {
+        statusEl.textContent = '';
+        submitBtn.disabled = false;
+        alert("Image upload failed. Please check your connection and try again.");
+        return;
       }
       submitBtn.disabled = false;
 
@@ -320,27 +444,26 @@
         if (index !== -1) {
           products[index] = {
             ...products[index],
-            name, description, colors, price, priceUSD, discount, variations,
-            images: imagesData, category
+            name, description, measurement, price, discount, variations,
+            images: imagesData, colorImages: colorImagesData, category
           };
           // Remove old single-size fields if present, now superseded by "variations"
           delete products[index].size;
-          delete products[index].measurement;
           delete products[index].stock;
         }
         alert("Product updated successfully!");
       } else {
         products.push({
           id: Date.now(),
-          name, description, colors, price, priceUSD, discount, variations,
-          images: imagesData, category, hidden: false
+          name, description, measurement, price, discount, variations,
+          images: imagesData, colorImages: colorImagesData, category, hidden: false
         });
         alert("Product added successfully!");
       }
 
       localStorage.setItem('products', JSON.stringify(products));
       cancelEdit(); // clears form and resets edit state
-      loadAdminProducts();
+      showAdminTab('inventory');
     }
 
     // Populates the form with an existing product's data for editing
@@ -355,18 +478,24 @@
       document.getElementById('prodCategory').value = p.category || 'toys';
       document.getElementById('prodName').value = p.name || '';
       document.getElementById('prodDescription').value = p.description || '';
-      document.getElementById('prodColors').value = p.colors || '';
+      document.getElementById('prodMeasurement').value = p.measurement || '';
       document.getElementById('prodPrice').value = p.price || '';
       document.getElementById('prodDiscount').value = p.discount || '';
-      document.getElementById('prodPriceUSD').value = p.priceUSD || '';
 
-      // Populate size/stock rows from variations, or fall back to
+      // Populate size/color/unit rows from variations, or fall back to
       // older single-size fields for products saved before this feature.
       document.getElementById('variationsContainer').innerHTML = '';
       const variations = (p.variations && p.variations.length)
         ? p.variations
-        : [{ size: p.size || '', measurement: p.measurement || '', stock: (p.stock === undefined ? null : p.stock) }];
+        : [{ size: p.size || '', color: '', stock: (p.stock === undefined ? null : p.stock) }];
       variations.forEach(v => addVariationRow(v));
+
+      // Populate optional per-color image rows
+      document.getElementById('colorImagesContainer').innerHTML = '';
+      const colorImages = p.colorImages || {};
+      Object.keys(colorImages).forEach(color => {
+        addColorImageRow({ color, images: colorImages[color] });
+      });
 
       const previewContainer = document.getElementById('imagePreviewContainer');
       previewContainer.innerHTML = '';
@@ -384,6 +513,7 @@
       document.getElementById('uploadStatus').textContent =
         'Current images shown below. Choosing new files will replace all of them.';
 
+      showAdminTab('add');
       document.querySelector('.admin-form').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -394,15 +524,15 @@
 
       document.getElementById('prodName').value = '';
       document.getElementById('prodDescription').value = '';
-      document.getElementById('prodColors').value = '';
+      document.getElementById('prodMeasurement').value = '';
       document.getElementById('prodPrice').value = '';
       document.getElementById('prodDiscount').value = '';
-      document.getElementById('prodPriceUSD').value = '';
       document.getElementById('prodCategory').value = 'toys';
       document.getElementById('prodImageFile').value = '';
       document.getElementById('imagePreviewContainer').innerHTML = '';
       document.getElementById('uploadStatus').textContent = '';
       resetVariationRows();
+      resetColorImageRows();
 
       document.getElementById('formTitle').textContent = 'Add New Product';
       document.getElementById('submitProductBtn').textContent = 'Add Product';
@@ -423,16 +553,19 @@
       }
 
       container.innerHTML = products.map(p => {
-        const priceText = p.price ? `₦${p.price.toLocaleString()}` : 'Price on request';
+        const priceText = p.price ? `$${p.price.toFixed(2)}` : 'Price on request';
         const discountText = p.discount ? ` • ${p.discount}% off` : '';
         const categoryLabel = CATEGORY_LABELS[p.category] || p.category || 'Cat Toys';
 
         const variations = (p.variations && p.variations.length)
           ? p.variations
-          : [{ size: p.size || '', measurement: p.measurement || '', stock: (p.stock === undefined ? null : p.stock) }];
+          : [{ size: p.size || '', color: '', stock: (p.stock === undefined ? null : p.stock) }];
 
         const stockControls = variations.map((v, i) => {
-          const label = v.size ? `<span class="stock-size-label">${v.size}:</span>` : (variations.length > 1 ? `<span class="stock-size-label">Option ${i + 1}:</span>` : '');
+          const labelText = [v.size, v.color].filter(Boolean).join(' ');
+          const label = labelText
+            ? `<span class="stock-size-label">${labelText}:</span>`
+            : (variations.length > 1 ? `<span class="stock-size-label">Row ${i + 1}:</span>` : '');
           const tracked = v.stock !== null && v.stock !== undefined;
           return tracked
             ? `<div class="stock-controls">
@@ -473,7 +606,7 @@
 
       // Normalize older single-size products on the fly
       if (!product.variations || !product.variations.length) {
-        product.variations = [{ size: product.size || '', measurement: product.measurement || '', stock: (product.stock === undefined ? null : product.stock) }];
+        product.variations = [{ size: product.size || '', color: '', stock: (product.stock === undefined ? null : product.stock) }];
         delete product.size;
         delete product.measurement;
         delete product.stock;
