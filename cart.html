@@ -75,6 +75,22 @@
         </div>
       </div>
 
+      <div class="customer-details">
+        <h3>Your Details</h3>
+        <p class="form-hint">We'll use these to confirm and deliver your order.</p>
+        <label for="customerName">Full Name</label>
+        <input type="text" id="customerName" placeholder="Your full name">
+
+        <label for="customerPhone">Phone Number</label>
+        <input type="tel" id="customerPhone" placeholder="e.g. +234 800 000 0000">
+
+        <label for="customerEmail">Email</label>
+        <input type="email" id="customerEmail" placeholder="you@example.com">
+
+        <label for="customerAddress">Delivery Address</label>
+        <textarea id="customerAddress" rows="2" placeholder="Street, city, state"></textarea>
+      </div>
+
       <div class="cart-actions">
         <button onclick="clearCart()" class="btn-outline">Clear Cart</button>
         <button onclick="checkoutStripe()" class="btn-primary" id="stripeBtn">Pay with Card (Stripe)</button>
@@ -85,16 +101,67 @@
     </div>
   </section>
 
-  <footer>
-    <p>&copy; 2026 Tails & Toys LLC</p>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-col footer-brand">
+        <div class="footer-logo">
+          <svg class="footer-cat" width="34" height="34" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="50" cy="72" rx="30" ry="22"/>
+            <circle cx="50" cy="38" r="21"/>
+            <path d="M33 27 L24 6 L46 21 Z"/>
+            <path d="M67 27 L76 6 L54 21 Z"/>
+            <path d="M78 62 C100 56 98 34 82 35 C70 36 71 52 80 58 Z"/>
+          </svg>
+          <span class="brand-text">Tailsandtoys</span>
+        </div>
+        <p class="footer-tagline">Almost there! Review your cart, then check out via card or Instagram.</p>
+        <a href="https://ig.me/m/tailsandtoysllc" target="_blank" rel="noopener" class="footer-social">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @tailsandtoysllc
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Continue Shopping</a>
+        <a href="index.html#about">About Us</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Need Help?</h4>
+        <a href="mailto:hello@tailsandtoys.com">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+          hello@tailsandtoys.com
+        </a>
+        <a href="tel:+18001234567">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.32 1.61.57 2.39a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.69-1.27a2 2 0 0 1 2.11-.45c.78.25 1.58.44 2.39.57A2 2 0 0 1 22 16.92z"/></svg>
+          +1 (800) 123-4567
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Tailsandtoys. All rights reserved. Made with ♥ for cats.</p>
+    </div>
   </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-init.js"></script>
   <script>
     // TODO: Replace with your deployed Firebase Functions base URL, e.g.
     // "https://us-central1-your-project-id.cloudfunctions.net"
     const FUNCTIONS_BASE_URL = "https://us-central1-YOUR-PROJECT-ID.cloudfunctions.net";
 
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    // Caps Cloudinary photo size for faster loading; CSS object-fit:cover
+    // handles the actual cropping/framing, so we don't force a crop here
+    // (forcing one too made photos look "zoomed in").
+    function cloudinaryThumbUrl(url) {
+      if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
+      return url.replace('/upload/', '/upload/c_limit,w_400,q_auto,f_auto/');
+    }
 
     function renderCart() {
       const container = document.getElementById('cartItems');
@@ -119,7 +186,7 @@
       cart.forEach((item, index) => {
         const itemHTML = `
           <div class="cart-item">
-            <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80x80/bfdbfe/1e40af?text=Cat'">
+            <img src="${cloudinaryThumbUrl(item.image)}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80x80/bfdbfe/1e40af?text=Cat'">
             <div class="item-details">
               <h3>${item.name}${[item.size, item.color].filter(Boolean).length ? ` <span class="item-size">(${[item.size, item.color].filter(Boolean).join(', ')})</span>` : ''}</h3>
               <p class="price">$${item.price.toFixed(2)}</p>
@@ -175,10 +242,82 @@
 
     const INSTAGRAM_USERNAME = "tailsandtoysllc";
 
+    // Reads and validates the customer details form. Returns the details
+    // object, or null (and shows an alert) if something required is missing.
+    function getCustomerDetails() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const email = document.getElementById('customerEmail').value.trim();
+      const address = document.getElementById('customerAddress').value.trim();
+
+      if (!name || !phone || !address) {
+        alert("Please fill in your name, phone number, and delivery address before checking out.");
+        return null;
+      }
+
+      return { name, phone, email, address };
+    }
+
+    // Saves a record of this order (with customer contact info) to
+    // Firestore so the admin can see who's buying what, under
+    // Admin → Orders.
+    async function saveOrder(customer, message, total, method) {
+      try {
+        await db.collection('orders').add({
+          customer,
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            size: item.size || '',
+            color: item.color || '',
+            price: item.price,
+            quantity: item.quantity
+          })),
+          total,
+          message,
+          method,
+          status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (err) {
+        console.error('Could not save order:', err);
+      }
+
+      saveCustomer(customer);
+    }
+
+    // Adds or updates a record in the shared "customers" list (used for
+    // the admin's Customers tab and bulk Announcements). Keyed by email
+    // when available, otherwise phone, so repeat customers update the
+    // same record instead of creating duplicates.
+    async function saveCustomer(customer) {
+      const key = (customer.email || customer.phone || '').trim().toLowerCase().replace(/[^a-z0-9@.+_-]/g, '_');
+      if (!key) return;
+
+      try {
+        await db.collection('customers').doc(key).set({
+          name: customer.name || '',
+          email: customer.email || '',
+          phone: customer.phone || '',
+          address: customer.address || '',
+          lastOrderAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.error('Could not save customer:', err);
+      }
+    }
+
     function checkoutInstagram() {
       if (cart.length === 0) return;
 
+      const customer = getCustomerDetails();
+      if (!customer) return;
+
       let message = "🛍️ New Order from Tails & Toys\n\n";
+      message += `Name: ${customer.name}\nPhone: ${customer.phone}\n`;
+      if (customer.email) message += `Email: ${customer.email}\n`;
+      message += `Address: ${customer.address}\n\n`;
+
       cart.forEach(item => {
         const details = [item.size, item.color].filter(Boolean).join(', ');
         const label = details ? `${item.name} (${details})` : item.name;
@@ -186,6 +325,8 @@
       });
       const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       message += `\nTotal: $${total.toFixed(2)}\n\nPlease confirm my order!`;
+
+      saveOrder(customer, message, total, 'instagram');
 
       // Instagram DMs don't support pre-filled message text via link, so we
       // copy the order details to the clipboard and let the customer paste
@@ -205,6 +346,12 @@
         alert("Your cart is empty 🛒");
         return;
       }
+
+      const customer = getCustomerDetails();
+      if (!customer) return;
+
+      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      saveOrder(customer, '', total, 'card');
 
       const btn = document.getElementById('stripeBtn');
       const originalText = btn.textContent;

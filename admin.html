@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="admin-page">
   <div class="admin-container">
     <h1>
       <a href="index.html" class="logo-link">
@@ -50,8 +50,10 @@
     <!-- Login Screen -->
     <div id="loginScreen">
       <h2>Admin Login</h2>
-      <input type="password" id="adminPassword" placeholder="Enter Admin Password" style="max-width:280px;">
+      <input type="email" id="adminEmail" placeholder="Admin Email" style="max-width:280px;" autocomplete="username">
+      <input type="password" id="adminPassword" placeholder="Password" style="max-width:280px;" autocomplete="current-password">
       <button onclick="loginAdmin()" class="btn-primary">Login</button>
+      <p id="loginError" style="color:#ef4444; font-size:0.9rem; margin-top:8px;"></p>
     </div>
 
     <!-- Admin Dashboard -->
@@ -68,6 +70,9 @@
       <div class="admin-tabs">
         <button type="button" class="admin-tab active" id="tabAddProduct" onclick="showAdminTab('add')">Add Product</button>
         <button type="button" class="admin-tab" id="tabInventory" onclick="showAdminTab('inventory')">Inventory</button>
+        <button type="button" class="admin-tab" id="tabOrders" onclick="showAdminTab('orders')">Orders</button>
+        <button type="button" class="admin-tab" id="tabCustomers" onclick="showAdminTab('customers')">Customers</button>
+        <button type="button" class="admin-tab" id="tabAnnouncements" onclick="showAdminTab('announcements')">Announcements</button>
       </div>
 
       <!-- Add New Product Form -->
@@ -93,9 +98,21 @@
         <textarea id="prodDescription" rows="3" placeholder="Describe the product, materials, what makes it special... (optional)"></textarea>
 
         <label>Size, Color &amp; Unit</label>
-        <p class="form-hint" style="margin-top:-4px;">Add one row per size + color combination you stock, with how many units you have (e.g. S Green 1, S Blue 2). Leave Size and/or Color blank if not needed.</p>
+        <p class="form-hint" style="margin-top:-4px;">Add one row per size + color combination you stock, with how many units you have (e.g. S Green 1, S Blue 2). Size can be anything — letters like S/M/L, or a measurement like "6 inches" or "6-8 inches" for items sized by length. Leave Size and/or Color blank if not needed.</p>
         <div id="variationsContainer"></div>
         <button type="button" onclick="addVariationRow()" class="btn-outline" style="margin-bottom: 14px;">+ Add Another Size/Color</button>
+        <datalist id="sizePresets">
+          <option value="S"></option>
+          <option value="M"></option>
+          <option value="L"></option>
+          <option value="XL"></option>
+          <option value="6 inches"></option>
+          <option value="8 inches"></option>
+          <option value="10 inches"></option>
+          <option value="6-8 inches"></option>
+          <option value="8-10 inches"></option>
+          <option value="10-12 inches"></option>
+        </datalist>
 
         <label>Color-Specific Images (optional)</label>
         <p class="form-hint" style="margin-top:-4px;">By default every color shows the same Product Images above. If a color (e.g. "Blue") should show its own photos instead, add it here with its own image(s). Colors left out just use the default images.</p>
@@ -121,51 +138,168 @@
       <div id="inventoryView" style="display:none;">
         <h3 style="margin-bottom: 1rem;">Inventory</h3>
         <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
-          Note: the demo product ("Interactive Feather Wand") is always shown on the storefront under Cat Toys and isn't listed or removable here. Anything you add appears here and on the shop, filterable by category.
+          Products you add here appear on the shop, filterable by category.
         </p>
+
+        <input type="text" id="inventorySearch" placeholder="Search products by name..." oninput="renderInventoryList()" style="margin-bottom: 14px;">
+
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab active" id="tabActiveInventory" onclick="showInventorySubTab('active')">Active</button>
+          <button type="button" class="admin-tab" id="tabRemovedInventory" onclick="showInventorySubTab('removed')">Removed Items</button>
+        </div>
+
         <div id="adminProductsList"></div>
+        <div id="removedProductsList" style="display:none;"></div>
+      </div>
+
+      <!-- Orders / Sold Items -->
+      <div id="ordersView" style="display:none;">
+        <h3 style="margin-bottom: 1rem;">Orders</h3>
+        <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
+          Every order placed through "Checkout via Instagram" is recorded here with the customer's contact details, so you can follow up and fulfill it. Mark an order as Sold once it's been paid for and shipped.
+        </p>
+        <input type="text" id="orderSearch" placeholder="Search orders by name, email or phone..." oninput="renderOrdersList()" style="margin-bottom: 14px;">
+        <div class="admin-tabs">
+          <button type="button" class="admin-tab active" id="tabPendingOrders" onclick="showOrdersSubTab('pending')">Pending</button>
+          <button type="button" class="admin-tab" id="tabSoldOrders" onclick="showOrdersSubTab('sold')">Sold Items</button>
+        </div>
+        <div id="ordersList"></div>
+      </div>
+
+      <!-- Customers -->
+      <div id="customersView" style="display:none;">
+        <h3 style="margin-bottom: 1rem;">Customers</h3>
+        <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
+          Built automatically from order details — every customer who checks out is added or updated here.
+        </p>
+        <input type="text" id="customerSearch" placeholder="Search customers by name, email or phone..." oninput="renderCustomersList()" style="margin-bottom: 14px;">
+        <div id="customersList"></div>
+      </div>
+
+      <!-- Announcements -->
+      <div id="announcementsView" style="display:none;">
+        <h3 style="margin-bottom: 1rem;">Announcements</h3>
+        <p style="color:#94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
+          Send a bulk message to all customers who have an email on file — for sales, new arrivals, or discounts. This opens your email app with everyone's address pre-filled in BCC, so you can review and send it yourself.
+        </p>
+        <div class="admin-form" style="padding:0; box-shadow:none; background:none;">
+          <label for="announcementSubject">Subject</label>
+          <input type="text" id="announcementSubject" placeholder="e.g. 20% off all cat toys this weekend!">
+
+          <label for="announcementMessage">Message</label>
+          <textarea id="announcementMessage" rows="6" placeholder="Write your announcement here..."></textarea>
+
+          <p id="announcementRecipientCount" class="form-hint">—</p>
+
+          <button onclick="sendAnnouncement()" class="btn-primary" id="sendAnnouncementBtn">Send to All Customers</button>
+          <div id="announcementBatchLinks"></div>
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem;">Past Announcements</h3>
+        <div id="announcementsList"></div>
       </div>
     </div>
+
   </div>
 
-  <script>
-    const ADMIN_PASSWORD = "demo123";
+  <footer class="admin-footer">
+    <p>Tailsandtoys Admin Panel &middot; Need help? <a href="mailto:afolabiibrahimdev@gmail.com">afolabiibrahimdev@gmail.com</a> &middot; &copy; 2026 Tailsandtoys</p>
+  </footer>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-init.js"></script>
+  <script>
     // Cloudinary unsigned upload config
     const CLOUDINARY_CLOUD_NAME = "dv933cgea";
     const CLOUDINARY_UPLOAD_PRESET = "tailsandtoys_products";
 
     function loginAdmin() {
+      const email = document.getElementById('adminEmail').value.trim();
       const pass = document.getElementById('adminPassword').value;
-      if (pass === ADMIN_PASSWORD) {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('adminDashboard').style.display = 'block';
-        showAdminTab('add');
-        loadAdminProducts();
-      } else {
-        alert("Incorrect Password");
+      const errorEl = document.getElementById('loginError');
+      errorEl.textContent = '';
+
+      if (!email || !pass) {
+        errorEl.textContent = 'Please enter your email and password.';
+        return;
       }
+
+      auth.signInWithEmailAndPassword(email, pass).catch(err => {
+        errorEl.textContent = 'Incorrect email or password.';
+      });
+      // On success, onAuthStateChanged (below) handles showing the dashboard.
     }
 
     function logoutAdmin() {
-      document.getElementById('loginScreen').style.display = 'block';
-      document.getElementById('adminDashboard').style.display = 'none';
-      document.getElementById('adminPassword').value = '';
+      auth.signOut();
     }
 
-    // Switches between the "Add Product" form and the "Inventory" list
-    function showAdminTab(tab) {
-      const showAdd = tab === 'add';
-      document.getElementById('addProductView').style.display = showAdd ? 'block' : 'none';
-      document.getElementById('inventoryView').style.display = showAdd ? 'none' : 'block';
-      document.getElementById('tabAddProduct').classList.toggle('active', showAdd);
-      document.getElementById('tabInventory').classList.toggle('active', !showAdd);
+    // Show the dashboard whenever a user is signed in, and the login
+    // screen otherwise. This also keeps the admin logged in across page
+    // reloads.
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminDashboard').style.display = 'block';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('loginError').textContent = '';
+        showAdminTab('add');
+      } else {
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('adminDashboard').style.display = 'none';
+      }
+    });
 
-      if (!showAdd) {
-        loadAdminProducts();
+    // Switches between the "Add Product" form, "Inventory" list, "Orders",
+    // "Customers", and "Announcements"
+    function showAdminTab(tab) {
+      document.getElementById('addProductView').style.display = tab === 'add' ? 'block' : 'none';
+      document.getElementById('inventoryView').style.display = tab === 'inventory' ? 'block' : 'none';
+      document.getElementById('ordersView').style.display = tab === 'orders' ? 'block' : 'none';
+      document.getElementById('customersView').style.display = tab === 'customers' ? 'block' : 'none';
+      document.getElementById('announcementsView').style.display = tab === 'announcements' ? 'block' : 'none';
+
+      document.getElementById('tabAddProduct').classList.toggle('active', tab === 'add');
+      document.getElementById('tabInventory').classList.toggle('active', tab === 'inventory');
+      document.getElementById('tabOrders').classList.toggle('active', tab === 'orders');
+      document.getElementById('tabCustomers').classList.toggle('active', tab === 'customers');
+      document.getElementById('tabAnnouncements').classList.toggle('active', tab === 'announcements');
+
+      if (tab === 'inventory') {
+        showInventorySubTab('active');
+      } else if (tab === 'orders') {
+        showOrdersSubTab('pending');
+      } else if (tab === 'customers') {
+        loadCustomers();
+      } else if (tab === 'announcements') {
+        loadAnnouncements();
       }
     }
     window.showAdminTab = showAdminTab;
+
+    // Switches between "Active" and "Removed Items" within Inventory
+    let inventorySubTab = 'active';
+    function showInventorySubTab(sub) {
+      inventorySubTab = sub;
+      document.getElementById('adminProductsList').style.display = sub === 'active' ? 'block' : 'none';
+      document.getElementById('removedProductsList').style.display = sub === 'removed' ? 'block' : 'none';
+      document.getElementById('tabActiveInventory').classList.toggle('active', sub === 'active');
+      document.getElementById('tabRemovedInventory').classList.toggle('active', sub === 'removed');
+      loadAdminProducts();
+    }
+    window.showInventorySubTab = showInventorySubTab;
+
+    // Switches between "Pending" and "Sold Items" within Orders
+    let ordersSubTab = 'pending';
+    function showOrdersSubTab(sub) {
+      ordersSubTab = sub;
+      document.getElementById('tabPendingOrders').classList.toggle('active', sub === 'pending');
+      document.getElementById('tabSoldOrders').classList.toggle('active', sub === 'sold');
+      loadOrders();
+    }
+    window.showOrdersSubTab = showOrdersSubTab;
 
     // Uploads an image file to Cloudinary (unsigned upload) and returns
     // the hosted image URL.
@@ -224,12 +358,7 @@
       row.className = 'variation-row';
       row.id = rowId;
       row.innerHTML = `
-        <select class="variation-size" aria-label="Size">
-          <option value="">No size</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-        </select>
+        <input type="text" class="variation-size" placeholder="Size (optional)" aria-label="Size" list="sizePresets">
         <input type="text" class="variation-color" placeholder="Color (optional)" aria-label="Color">
         <input type="number" min="0" class="variation-stock" placeholder="Unit" aria-label="Unit">
         <button type="button" class="variation-remove" onclick="removeVariationRow('${rowId}')" aria-label="Remove row">✕</button>
@@ -267,7 +396,7 @@
     function collectVariations() {
       const rows = document.querySelectorAll('#variationsContainer .variation-row');
       return Array.from(rows).map(row => {
-        const size = row.querySelector('.variation-size').value;
+        const size = row.querySelector('.variation-size').value.trim();
         const color = row.querySelector('.variation-color').value.trim();
         const stockInput = row.querySelector('.variation-stock').value.trim();
         const stock = stockInput !== '' ? Math.max(0, parseInt(stockInput)) : null;
@@ -436,41 +565,38 @@
       }
       submitBtn.disabled = false;
 
-      let products = JSON.parse(localStorage.getItem('products')) || [];
+      const productData = {
+        name, description, measurement, price, discount, variations,
+        images: imagesData, colorImages: colorImagesData, category
+      };
 
-      if (editingProductId !== null) {
-        // Update existing product, preserving its hidden state
-        const index = products.findIndex(p => p.id === editingProductId);
-        if (index !== -1) {
-          products[index] = {
-            ...products[index],
-            name, description, measurement, price, discount, variations,
-            images: imagesData, colorImages: colorImagesData, category
-          };
-          // Remove old single-size fields if present, now superseded by "variations"
-          delete products[index].size;
-          delete products[index].stock;
+      try {
+        if (editingProductId !== null) {
+          // Update existing product, preserving its hidden state and id
+          await db.collection('products').doc(String(editingProductId)).update(productData);
+          alert("Product updated successfully!");
+        } else {
+          const id = Date.now();
+          await db.collection('products').doc(String(id)).set({
+            ...productData,
+            hidden: false
+          });
+          alert("Product added successfully!");
         }
-        alert("Product updated successfully!");
-      } else {
-        products.push({
-          id: Date.now(),
-          name, description, measurement, price, discount, variations,
-          images: imagesData, colorImages: colorImagesData, category, hidden: false
-        });
-        alert("Product added successfully!");
+      } catch (err) {
+        alert("Could not save product: " + err.message);
+        return;
       }
 
-      localStorage.setItem('products', JSON.stringify(products));
       cancelEdit(); // clears form and resets edit state
       showAdminTab('inventory');
     }
 
     // Populates the form with an existing product's data for editing
-    function editProduct(id) {
-      let products = JSON.parse(localStorage.getItem('products')) || [];
-      const p = products.find(prod => prod.id === id);
-      if (!p) return;
+    async function editProduct(id) {
+      const doc = await db.collection('products').doc(String(id)).get();
+      if (!doc.exists) return;
+      const p = { id, ...doc.data() };
 
       editingProductId = p.id;
       editingProductImages = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
@@ -543,12 +669,66 @@
 
     const CATEGORY_LABELS = { toys: "Cat Toys", accessories: "Accessories" };
 
-    function loadAdminProducts() {
+    // Cached product list from Firestore; renderInventoryList() filters and
+    // displays from this without re-fetching on every keystroke of search.
+    let cachedProducts = [];
+
+    async function loadAdminProducts() {
       const container = document.getElementById('adminProductsList');
-      let products = JSON.parse(localStorage.getItem('products')) || [];
+      container.innerHTML = "<p>Loading...</p>";
+
+      try {
+        const snapshot = await db.collection('products').get();
+        cachedProducts = snapshot.docs.map(doc => ({ id: Number(doc.id), ...doc.data() }));
+        cachedProducts.sort((a, b) => b.id - a.id);
+      } catch (err) {
+        container.innerHTML = `<p>Could not load products: ${err.message}</p>`;
+        return;
+      }
+
+      renderInventoryList();
+    }
+
+    // Renders either the Active or Removed list (based on inventorySubTab),
+    // filtered by the search box, from the already-fetched cachedProducts.
+    function renderInventoryList() {
+      const search = document.getElementById('inventorySearch').value.trim().toLowerCase();
+      const matches = p => !search || (p.name || '').toLowerCase().includes(search);
+
+      if (inventorySubTab === 'removed') {
+        const container = document.getElementById('removedProductsList');
+        const products = cachedProducts.filter(p => p.removed && matches(p));
+
+        if (products.length === 0) {
+          container.innerHTML = "<p>No removed products.</p>";
+          return;
+        }
+
+        container.innerHTML = products.map(p => {
+          const thumbSrc = (p.images && p.images[0]) || p.image || '';
+          return `
+          <div class="admin-product-item hidden-product">
+            <img src="${thumbSrc}" alt="${p.name}" style="width:70px; height:70px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/70x70/bfdbfe/1e40af?text=Cat'">
+            <div>
+              <strong>${p.name}</strong> <span class="hidden-tag">Removed</span>
+            </div>
+            <div class="admin-item-actions">
+              <button onclick="restoreProduct(${p.id})" class="action-btn hide-btn">Restore</button>
+              <button onclick="permanentlyDeleteProduct(${p.id})" class="action-btn delete-btn">Delete Permanently</button>
+            </div>
+          </div>
+        `;
+        }).join('');
+        return;
+      }
+
+      const container = document.getElementById('adminProductsList');
+      const products = cachedProducts.filter(p => !p.removed && matches(p));
 
       if (products.length === 0) {
-        container.innerHTML = "<p>No additional products added yet.</p>";
+        container.innerHTML = cachedProducts.some(p => !p.removed)
+          ? "<p>No products match your search.</p>"
+          : "<p>No additional products added yet.</p>";
         return;
       }
 
@@ -580,29 +760,41 @@
         const thumbSrc = (p.images && p.images[0]) || p.image || '';
         const imageCount = (p.images && p.images.length) || (p.image ? 1 : 0);
 
+        // Total pieces available = sum of tracked variation stocks. If any
+        // variation is untracked (unlimited), note that alongside the total.
+        const trackedVariations = variations.filter(v => v.stock !== null && v.stock !== undefined);
+        const hasUnlimited = trackedVariations.length < variations.length;
+        const totalStock = trackedVariations.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+        const totalStockText = trackedVariations.length === 0
+          ? 'Unlimited stock'
+          : `Total available: ${totalStock} piece${totalStock === 1 ? '' : 's'}${hasUnlimited ? ' + unlimited option' : ''}`;
+
         return `
         <div class="admin-product-item ${p.hidden ? 'hidden-product' : ''}">
           <img src="${thumbSrc}" alt="${p.name}" style="width:70px; height:70px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/70x70/bfdbfe/1e40af?text=Cat'">
           <div>
             <strong>${p.name}</strong>${p.hidden ? ' <span class="hidden-tag">Hidden</span>' : ''}<br>
             ${priceText}${discountText} • ${categoryLabel}${imageCount > 1 ? ` • ${imageCount} images` : ''}<br>
+            <span class="total-stock">${totalStockText}</span>
             ${stockControls}
           </div>
           <div class="admin-item-actions">
             <button onclick="editProduct(${p.id})" class="action-btn edit-btn">Edit</button>
             <button onclick="toggleHidden(${p.id})" class="action-btn hide-btn">${p.hidden ? 'Show' : 'Hide'}</button>
-            <button onclick="deleteProduct(${p.id})" class="action-btn delete-btn">Delete</button>
+            <button onclick="deleteProduct(${p.id})" class="action-btn delete-btn">Remove</button>
           </div>
         </div>
       `;
       }).join('');
     }
+    window.renderInventoryList = renderInventoryList;
 
     // Adjusts a product's stock count by +1 or -1 (won't go below 0)
-    function adjustStock(id, variationIndex, delta) {
-      let products = JSON.parse(localStorage.getItem('products')) || [];
-      const product = products.find(p => p.id === id);
-      if (!product) return;
+    async function adjustStock(id, variationIndex, delta) {
+      const ref = db.collection('products').doc(String(id));
+      const doc = await ref.get();
+      if (!doc.exists) return;
+      const product = doc.data();
 
       // Normalize older single-size products on the fly
       if (!product.variations || !product.variations.length) {
@@ -616,30 +808,28 @@
       if (!variation || variation.stock === null || variation.stock === undefined) return;
 
       variation.stock = Math.max(0, (Number(variation.stock) || 0) + delta);
-      localStorage.setItem('products', JSON.stringify(products));
+      await ref.update({ variations: product.variations });
       loadAdminProducts();
     }
     window.adjustStock = adjustStock;
 
     // Shows/hides a product on the storefront without deleting it
-    function toggleHidden(id) {
-      let products = JSON.parse(localStorage.getItem('products')) || [];
-      const product = products.find(p => p.id === id);
-      if (!product) return;
+    async function toggleHidden(id) {
+      const ref = db.collection('products').doc(String(id));
+      const doc = await ref.get();
+      if (!doc.exists) return;
 
-      product.hidden = !product.hidden;
-      localStorage.setItem('products', JSON.stringify(products));
+      await ref.update({ hidden: !doc.data().hidden });
       loadAdminProducts();
     }
     window.toggleHidden = toggleHidden;
 
-    function deleteProduct(id) {
-      if (confirm("Delete this product?")) {
-        let products = JSON.parse(localStorage.getItem('products')) || [];
-        products = products.filter(p => p.id !== id);
-        localStorage.setItem('products', JSON.stringify(products));
+    // "Remove" is a soft delete: the product disappears from the shop and
+    // the active inventory list, but can be restored from "Removed Items".
+    async function deleteProduct(id) {
+      if (confirm("Remove this product? You can restore it later from \"Removed Items\".")) {
+        await db.collection('products').doc(String(id)).update({ removed: true, hidden: true });
 
-        // If the deleted product was open in the edit form, reset it
         if (editingProductId === id) {
           cancelEdit();
         }
@@ -647,6 +837,569 @@
         loadAdminProducts();
       }
     }
+    window.deleteProduct = deleteProduct;
+
+    // Restores a removed product back to the active inventory (still
+    // hidden, so the admin can review/un-hide it deliberately).
+    async function restoreProduct(id) {
+      await db.collection('products').doc(String(id)).update({ removed: false });
+      loadAdminProducts();
+    }
+    window.restoreProduct = restoreProduct;
+
+    // Permanently deletes a removed product. Cannot be undone.
+    async function permanentlyDeleteProduct(id) {
+      if (confirm("Permanently delete this product? This cannot be undone.")) {
+        await db.collection('products').doc(String(id)).delete();
+        loadAdminProducts();
+      }
+    }
+    window.permanentlyDeleteProduct = permanentlyDeleteProduct;
+
+    // ===== Orders / Sold Items =====
+    let cachedOrders = [];
+
+    // Small inline SVG icons used in the order list (replacing emoji)
+    const ICON_PHONE = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.32 1.61.57 2.39a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.69-1.27a2 2 0 0 1 2.11-.45c.78.25 1.58.44 2.39.57A2 2 0 0 1 22 16.92z"/></svg>`;
+    const ICON_MAIL = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>`;
+    const ICON_PIN = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    const ICON_INSTAGRAM = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>`;
+    const ICON_CARD = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`;
+    let editingOrderId = null;
+    let editingOrderItems = null;
+
+    async function loadOrders() {
+      const container = document.getElementById('ordersList');
+      container.innerHTML = "<p>Loading...</p>";
+      editingOrderId = null;
+
+      try {
+        const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
+        cachedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (err) {
+        container.innerHTML = `<p>Could not load orders: ${err.message}</p>`;
+        return;
+      }
+
+      renderOrdersList();
+    }
+
+    // Renders the Pending or Sold orders list, filtered by the search box.
+    function renderOrdersList() {
+      const container = document.getElementById('ordersList');
+      const search = document.getElementById('orderSearch').value.trim().toLowerCase();
+      const wantSold = ordersSubTab === 'sold';
+
+      const matches = o => {
+        if (!search) return true;
+        const c = o.customer || {};
+        return (c.name || '').toLowerCase().includes(search)
+          || (c.email || '').toLowerCase().includes(search)
+          || (c.phone || '').toLowerCase().includes(search);
+      };
+
+      const orders = cachedOrders.filter(o => (o.status === 'sold') === wantSold && matches(o));
+
+      if (orders.length === 0) {
+        container.innerHTML = `<p>No ${wantSold ? 'sold' : 'pending'} orders${search ? ' match your search' : ''}.</p>`;
+        return;
+      }
+
+      container.innerHTML = orders.map(o => {
+        if (o.id === editingOrderId) return renderOrderEditForm(o);
+
+        const c = o.customer || {};
+        const date = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate().toLocaleString() : '';
+        const itemsHTML = (o.items || []).map(item => {
+          const details = [item.size, item.color].filter(Boolean).join(', ');
+          const label = details ? `${item.name} (${details})` : item.name;
+          return `<div>${label} × ${item.quantity} — $${(item.price * item.quantity).toFixed(2)}</div>`;
+        }).join('');
+
+        const methodBadge = o.method === 'card'
+          ? `<span class="order-method-badge">${ICON_CARD} Card</span>`
+          : `<span class="order-method-badge">${ICON_INSTAGRAM} Instagram</span>`;
+
+        return `
+        <div class="admin-product-item order-item">
+          <div>
+            <strong>${c.name || 'Unknown customer'}</strong> ${methodBadge}${date ? ` <span class="order-date">${date}</span>` : ''}<br>
+            <span class="order-contact">${ICON_PHONE} ${c.phone || '—'}${c.email ? ` &nbsp;•&nbsp; ${ICON_MAIL} ${c.email}` : ''}</span><br>
+            <span class="order-contact">${ICON_PIN} ${c.address || '—'}</span>
+            <div class="order-items">${itemsHTML}</div>
+            <strong>Total: $${(o.total || 0).toFixed(2)}</strong>
+          </div>
+          <div class="admin-item-actions">
+            <button onclick="toggleOrderStatus('${o.id}')" class="action-btn hide-btn">${wantSold ? 'Mark as Pending' : 'Approve'}</button>
+            <button onclick="editOrder('${o.id}')" class="action-btn edit-btn">Edit</button>
+            <button onclick="deleteOrder('${o.id}')" class="action-btn delete-btn">Delete</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+    window.renderOrdersList = renderOrdersList;
+
+    // Renders the editable form for one order: customer details, a
+    // quantity field per item (set to 0 to remove that item entirely),
+    // and a way to add any active product from inventory.
+    function renderOrderEditForm(o) {
+      const c = o.customer || {};
+      const itemsHTML = editingOrderItems.map((item, i) => {
+        const details = [item.size, item.color].filter(Boolean).join(', ');
+        const label = details ? `${item.name} (${details})` : item.name;
+        return `
+          <div class="order-edit-item">
+            <span>${label} — $${item.price.toFixed(2)} each</span>
+            <input type="number" min="0" class="order-edit-qty" data-index="${i}" value="${item.quantity}">
+          </div>`;
+      }).join('');
+
+      const productOptions = buildProductOptions();
+      const addProductHTML = productOptions.length
+        ? `
+          <label>Add a product from inventory</label>
+          <div class="order-add-product">
+            <select id="addProductSelect-${o.id}">
+              ${productOptions.map((opt, i) => `<option value="${i}">${opt.label}</option>`).join('')}
+            </select>
+            <button type="button" onclick="addProductToOrder('${o.id}')" class="btn-outline">+ Add</button>
+          </div>`
+        : '';
+
+      return `
+      <div class="admin-product-item order-item order-edit-form" id="orderEdit-${o.id}">
+        <div style="width:100%;">
+          <label>Name</label>
+          <input type="text" id="editOrderName-${o.id}" value="${(c.name || '').replace(/"/g, '&quot;')}">
+          <label>Phone</label>
+          <input type="tel" id="editOrderPhone-${o.id}" value="${(c.phone || '').replace(/"/g, '&quot;')}">
+          <label>Email</label>
+          <input type="email" id="editOrderEmail-${o.id}" value="${(c.email || '').replace(/"/g, '&quot;')}">
+          <label>Address</label>
+          <textarea id="editOrderAddress-${o.id}" rows="2">${c.address || ''}</textarea>
+          <label>Items (set to 0 to remove)</label>
+          ${itemsHTML || '<p class="form-hint" style="margin:0 0 10px;">No items — add one below.</p>'}
+          ${addProductHTML}
+          <div class="admin-item-actions" style="margin-top:10px;">
+            <button onclick="saveOrderEdit('${o.id}')" class="action-btn edit-btn">Save</button>
+            <button onclick="cancelOrderEdit()" class="action-btn hide-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+      `;
+    }
+
+    // Flattens active products + their size/color variations into a list
+    // of selectable options for "add a product from inventory".
+    function buildProductOptions() {
+      const options = [];
+      cachedProducts.filter(p => !p.removed && !p.hidden).forEach(p => {
+        const price = p.price || 0;
+        const variations = (p.variations && p.variations.length) ? p.variations : [{ size: '', color: '' }];
+        const seen = new Set();
+        variations.forEach(v => {
+          const key = `${v.size || ''}|${v.color || ''}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          const details = [v.size, v.color].filter(Boolean).join(', ');
+          const label = `${p.name}${details ? ` (${details})` : ''} — $${price.toFixed(2)}`;
+          options.push({ id: p.id, name: p.name, size: v.size || '', color: v.color || '', price, label });
+        });
+      });
+      return options;
+    }
+
+    // Adds the selected inventory product/variation to the order being
+    // edited (or bumps its quantity if it's already in the order).
+    function addProductToOrder(orderId) {
+      const select = document.getElementById(`addProductSelect-${orderId}`);
+      if (!select) return;
+      const opt = buildProductOptions()[parseInt(select.value, 10)];
+      if (!opt) return;
+
+      const existing = editingOrderItems.find(it =>
+        it.id === opt.id && (it.size || '') === opt.size && (it.color || '') === opt.color
+      );
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        editingOrderItems.push({ id: opt.id, name: opt.name, size: opt.size, color: opt.color, price: opt.price, quantity: 1 });
+      }
+      renderOrdersList();
+    }
+    window.addProductToOrder = addProductToOrder;
+
+    // Ensures cachedProducts is populated (e.g. if the admin opens Orders
+    // before ever visiting Inventory) so "add from inventory" has options.
+    async function ensureProductsCached() {
+      if (cachedProducts.length > 0) return;
+      try {
+        const snapshot = await db.collection('products').get();
+        cachedProducts = snapshot.docs.map(doc => ({ id: Number(doc.id), ...doc.data() }));
+      } catch (err) {
+        console.error('Could not load products for order editing:', err);
+      }
+    }
+
+    async function editOrder(id) {
+      await ensureProductsCached();
+      const order = cachedOrders.find(o => o.id === id);
+      if (!order) return;
+      editingOrderId = id;
+      editingOrderItems = JSON.parse(JSON.stringify(order.items || []));
+      renderOrdersList();
+    }
+    window.editOrder = editOrder;
+
+    function cancelOrderEdit() {
+      editingOrderId = null;
+      editingOrderItems = null;
+      renderOrdersList();
+    }
+    window.cancelOrderEdit = cancelOrderEdit;
+
+    // Saves edited customer details, item quantities, and any added
+    // products for an order. Items with quantity 0 are removed; the
+    // total is recalculated.
+    async function saveOrderEdit(id) {
+      const customer = {
+        name: document.getElementById(`editOrderName-${id}`).value.trim(),
+        phone: document.getElementById(`editOrderPhone-${id}`).value.trim(),
+        email: document.getElementById(`editOrderEmail-${id}`).value.trim(),
+        address: document.getElementById(`editOrderAddress-${id}`).value.trim()
+      };
+
+      const form = document.getElementById(`orderEdit-${id}`);
+      const qtyInputs = form.querySelectorAll('.order-edit-qty');
+      const items = [];
+      qtyInputs.forEach(input => {
+        const index = parseInt(input.dataset.index, 10);
+        const qty = Math.max(0, parseInt(input.value, 10) || 0);
+        if (qty > 0) {
+          items.push({ ...editingOrderItems[index], quantity: qty });
+        }
+      });
+
+      const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+      await db.collection('orders').doc(id).update({ customer, items, total });
+      await upsertCustomerFromOrder(customer);
+      editingOrderId = null;
+      editingOrderItems = null;
+      loadOrders();
+    }
+    window.saveOrderEdit = saveOrderEdit;
+
+    // Toggles an order between "pending" and "sold"
+    async function toggleOrderStatus(id) {
+      const order = cachedOrders.find(o => o.id === id);
+      if (!order) return;
+      const newStatus = order.status === 'sold' ? 'pending' : 'sold';
+      await db.collection('orders').doc(id).update({ status: newStatus });
+
+      // Safety net: make sure this customer is in the Customers list,
+      // even if the order was placed before that feature existed.
+      if (newStatus === 'sold' && order.customer) {
+        await upsertCustomerFromOrder(order.customer);
+      }
+
+      loadOrders();
+    }
+    window.toggleOrderStatus = toggleOrderStatus;
+
+    // Adds or updates a customer record from an order's contact details.
+    // Mirrors saveCustomer() in cart.html, keyed by email (or phone if no
+    // email) so repeat customers update the same record.
+    async function upsertCustomerFromOrder(customer) {
+      const key = (customer.email || customer.phone || '').trim().toLowerCase().replace(/[^a-z0-9@.+_-]/g, '_');
+      if (!key) return;
+
+      try {
+        await db.collection('customers').doc(key).set({
+          name: customer.name || '',
+          email: customer.email || '',
+          phone: customer.phone || '',
+          address: customer.address || '',
+          lastOrderAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (err) {
+        console.error('Could not save customer:', err);
+      }
+    }
+
+    async function deleteOrder(id) {
+      if (confirm("Delete this order record?")) {
+        await db.collection('orders').doc(id).delete();
+        loadOrders();
+      }
+    }
+    window.deleteOrder = deleteOrder;
+
+    // ===== Customers =====
+    let cachedCustomers = [];
+
+    async function loadCustomers() {
+      const container = document.getElementById('customersList');
+      container.innerHTML = "<p>Loading...</p>";
+      editingCustomerId = null;
+
+      try {
+        const snapshot = await db.collection('customers').orderBy('lastOrderAt', 'desc').get();
+        cachedCustomers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      } catch (err) {
+        container.innerHTML = `<p>Could not load customers: ${err.message}</p>`;
+        return;
+      }
+
+      renderCustomersList();
+    }
+
+    function renderCustomersList() {
+      const container = document.getElementById('customersList');
+      const search = document.getElementById('customerSearch').value.trim().toLowerCase();
+
+      const customers = cachedCustomers.filter(c => {
+        if (!search) return true;
+        return (c.name || '').toLowerCase().includes(search)
+          || (c.email || '').toLowerCase().includes(search)
+          || (c.phone || '').toLowerCase().includes(search);
+      });
+
+      if (customers.length === 0) {
+        container.innerHTML = `<p>No customers${search ? ' match your search' : ' yet'}.</p>`;
+        return;
+      }
+
+      container.innerHTML = customers.map(c => {
+        if (c.id === editingCustomerId) return renderCustomerEditForm(c);
+
+        const date = c.lastOrderAt && c.lastOrderAt.toDate ? c.lastOrderAt.toDate().toLocaleDateString() : '';
+        return `
+        <div class="admin-product-item order-item">
+          <div>
+            <strong>${c.name || 'Unknown'}</strong>${date ? ` <span class="order-date">Last order: ${date}</span>` : ''}<br>
+            <span class="order-contact">${ICON_PHONE} ${c.phone || '—'}${c.email ? ` &nbsp;•&nbsp; ${ICON_MAIL} ${c.email}` : ''}</span><br>
+            <span class="order-contact">${ICON_PIN} ${c.address || '—'}</span>
+          </div>
+          <div class="admin-item-actions">
+            <button onclick="editCustomer('${c.id}')" class="action-btn edit-btn">Edit</button>
+            <button onclick="deleteCustomer('${c.id}')" class="action-btn delete-btn">Delete</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+    window.renderCustomersList = renderCustomersList;
+
+    // Renders an inline edit form for one customer's details.
+    let editingCustomerId = null;
+    function renderCustomerEditForm(c) {
+      return `
+      <div class="admin-product-item order-item order-edit-form" id="customerEdit-${c.id}">
+        <div style="width:100%;">
+          <label>Name</label>
+          <input type="text" id="editCustomerName-${c.id}" value="${(c.name || '').replace(/"/g, '&quot;')}">
+          <label>Phone</label>
+          <input type="tel" id="editCustomerPhone-${c.id}" value="${(c.phone || '').replace(/"/g, '&quot;')}">
+          <label>Email</label>
+          <input type="email" id="editCustomerEmail-${c.id}" value="${(c.email || '').replace(/"/g, '&quot;')}">
+          <label>Address</label>
+          <textarea id="editCustomerAddress-${c.id}" rows="2">${c.address || ''}</textarea>
+          <div class="admin-item-actions" style="margin-top:10px;">
+            <button onclick="saveCustomerEdit('${c.id}')" class="action-btn edit-btn">Save</button>
+            <button onclick="cancelCustomerEdit()" class="action-btn hide-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+      `;
+    }
+
+    function editCustomer(id) {
+      editingCustomerId = id;
+      renderCustomersList();
+    }
+    window.editCustomer = editCustomer;
+
+    function cancelCustomerEdit() {
+      editingCustomerId = null;
+      renderCustomersList();
+    }
+    window.cancelCustomerEdit = cancelCustomerEdit;
+
+    // Saves edited customer details. If the email/phone (the document's
+    // key) changed, the record is moved to a new doc id so the key stays
+    // in sync with saveCustomer()'s lookup in cart.html.
+    async function saveCustomerEdit(id) {
+      const updated = {
+        name: document.getElementById(`editCustomerName-${id}`).value.trim(),
+        phone: document.getElementById(`editCustomerPhone-${id}`).value.trim(),
+        email: document.getElementById(`editCustomerEmail-${id}`).value.trim(),
+        address: document.getElementById(`editCustomerAddress-${id}`).value.trim()
+      };
+
+      const existing = cachedCustomers.find(c => c.id === id);
+      const newKey = (updated.email || updated.phone || '').trim().toLowerCase().replace(/[^a-z0-9@.+_-]/g, '_');
+
+      if (!newKey) {
+        alert("Please provide at least an email or phone number.");
+        return;
+      }
+
+      try {
+        if (newKey !== id) {
+          // Key changed (e.g. email corrected) — write under the new id
+          // and remove the old record so there's no duplicate.
+          await db.collection('customers').doc(newKey).set({
+            ...updated,
+            lastOrderAt: (existing && existing.lastOrderAt) || firebase.firestore.FieldValue.serverTimestamp()
+          });
+          await db.collection('customers').doc(id).delete();
+        } else {
+          await db.collection('customers').doc(id).update(updated);
+        }
+      } catch (err) {
+        alert("Could not save customer: " + err.message);
+        return;
+      }
+
+      editingCustomerId = null;
+      loadCustomers();
+    }
+    window.saveCustomerEdit = saveCustomerEdit;
+
+    async function deleteCustomer(id) {
+      if (confirm("Delete this customer record? This won't affect their past orders.")) {
+        await db.collection('customers').doc(id).delete();
+        loadCustomers();
+      }
+    }
+    window.deleteCustomer = deleteCustomer;
+
+    // ===== Announcements =====
+    async function loadAnnouncements() {
+      // Refresh the recipient count whenever the tab is opened
+      updateAnnouncementRecipientCount();
+
+      const container = document.getElementById('announcementsList');
+      container.innerHTML = "<p>Loading...</p>";
+
+      try {
+        const snapshot = await db.collection('announcements').orderBy('sentAt', 'desc').limit(20).get();
+        const announcements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (announcements.length === 0) {
+          container.innerHTML = "<p>No announcements sent yet.</p>";
+          return;
+        }
+
+        container.innerHTML = announcements.map(a => {
+          const date = a.sentAt && a.sentAt.toDate ? a.sentAt.toDate().toLocaleString() : '';
+          return `
+          <div class="admin-product-item order-item">
+            <div>
+              <strong>${a.subject || '(no subject)'}</strong> <span class="order-date">${date}</span><br>
+              <span class="order-contact">Sent to ${a.recipientCount || 0} customer${a.recipientCount === 1 ? '' : 's'}</span>
+              <div class="order-items">${(a.message || '').replace(/\n/g, '<br>')}</div>
+            </div>
+            <div class="admin-item-actions">
+              <button onclick="deleteAnnouncement('${a.id}')" class="action-btn delete-btn">Delete</button>
+            </div>
+          </div>
+        `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<p>Could not load announcements: ${err.message}</p>`;
+      }
+    }
+
+    // Updates the "X customers will receive this" hint text
+    async function updateAnnouncementRecipientCount() {
+      const el = document.getElementById('announcementRecipientCount');
+      el.textContent = 'Loading recipient count...';
+      try {
+        const snapshot = await db.collection('customers').get();
+        const emails = snapshot.docs.map(d => d.data().email).filter(Boolean);
+        el.textContent = `This will go to ${emails.length} customer${emails.length === 1 ? '' : 's'} with an email on file.`;
+      } catch (err) {
+        el.textContent = 'Could not load recipient count.';
+      }
+    }
+
+    // Opens the admin's email client with all customer emails in BCC,
+    // and records the announcement in Firestore for the history list.
+    async function sendAnnouncement() {
+      const subject = document.getElementById('announcementSubject').value.trim();
+      const message = document.getElementById('announcementMessage').value.trim();
+      const linksContainer = document.getElementById('announcementBatchLinks');
+      linksContainer.innerHTML = '';
+
+      if (!subject || !message) {
+        alert("Please fill in both a subject and a message.");
+        return;
+      }
+
+      const btn = document.getElementById('sendAnnouncementBtn');
+      btn.disabled = true;
+
+      try {
+        const snapshot = await db.collection('customers').get();
+        const emails = snapshot.docs.map(d => d.data().email).filter(Boolean);
+
+        if (emails.length === 0) {
+          alert("No customers with an email on file yet.");
+          return;
+        }
+
+        // Most email clients have a practical limit on URL/BCC length.
+        // For very large lists, split into batches the admin opens one at a time.
+        const BATCH_SIZE = 50;
+        const batches = [];
+        for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+          batches.push(emails.slice(i, i + BATCH_SIZE));
+        }
+
+        const buildMailto = batch =>
+          `mailto:?bcc=${encodeURIComponent(batch.join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+
+        if (batches.length === 1) {
+          // Navigating directly is the most reliable way to hand off to
+          // the OS's mail app (more reliable than window.open for mailto:).
+          window.location.href = buildMailto(batches[0]);
+        } else {
+          // Render one button per batch; clicking each opens the mail app
+          // for that group of recipients.
+          linksContainer.innerHTML = `<p class="form-hint">This list is large, so it's split into ${batches.length} batches of up to ${BATCH_SIZE}. Click each to open your email app for that batch:</p>` +
+            batches.map((batch, i) =>
+              `<button type="button" class="btn-outline" style="margin:4px 6px 0 0;" onclick="window.location.href='${buildMailto(batch)}'">Open Batch ${i + 1} (${batch.length} recipients)</button>`
+            ).join('');
+        }
+
+        await db.collection('announcements').add({
+          subject,
+          message,
+          recipientCount: emails.length,
+          sentAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        document.getElementById('announcementSubject').value = '';
+        document.getElementById('announcementMessage').value = '';
+        loadAnnouncements();
+      } catch (err) {
+        alert("Could not prepare announcement: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    window.sendAnnouncement = sendAnnouncement;
+
+    async function deleteAnnouncement(id) {
+      if (confirm("Delete this announcement record? (This won't unsend any emails already opened.)")) {
+        await db.collection('announcements').doc(id).delete();
+        loadAnnouncements();
+      }
+    }
+    window.deleteAnnouncement = deleteAnnouncement;
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {

@@ -78,7 +78,74 @@
     <div class="hero-content">
       <h1>Happy Cats, <span class="highlight">Happy Homes</span></h1>
       <p>Premium toys, scratching posts & accessories for your feline friends</p>
-      <a href="#shop" class="btn-primary">Shop Now</a>
+      <a href="#shop" class="btn-primary shop-now-btn">
+        Shop Now
+        <svg class="paw-hover-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="32" cy="40" rx="16" ry="13"/>
+          <ellipse cx="13" cy="22" rx="7" ry="9" transform="rotate(-25 13 22)"/>
+          <ellipse cx="28" cy="14" rx="7" ry="9" transform="rotate(-8 28 14)"/>
+          <ellipse cx="44" cy="14" rx="7" ry="9" transform="rotate(8 44 14)"/>
+          <ellipse cx="55" cy="24" rx="7" ry="9" transform="rotate(25 55 24)"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="lying-cat" aria-hidden="true">
+      <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="catBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#3a4456"/>
+            <stop offset="1" stop-color="#10151f"/>
+          </linearGradient>
+          <linearGradient id="catBodyDark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2a3242"/>
+            <stop offset="1" stop-color="#0a0e16"/>
+          </linearGradient>
+        </defs>
+
+        <ellipse cx="150" cy="194" rx="135" ry="8" fill="rgba(15,23,42,0.18)"/>
+
+        <!-- Tail: curls behind the body, tip wiggles slowly -->
+        <g class="cat-tail">
+          <path d="M196,148 C232,144 268,156 284,118 C296,90 280,70 263,76 C248,81 254,108 233,124 C214,138 202,145 196,150 Z" fill="url(#catBodyDark)"/>
+        </g>
+
+        <!-- Body: lying "loaf" pose -->
+        <path d="M28,182 C20,115 62,72 132,68 C196,64 248,82 262,132 C270,160 256,184 224,185 L54,185 C34,185 29,184 28,182 Z" fill="url(#catBody)"/>
+
+        <!-- Subtle chest sheen -->
+        <ellipse cx="78" cy="165" rx="42" ry="26" fill="#3a4456" opacity="0.35"/>
+
+        <!-- Front paws -->
+        <ellipse cx="55" cy="180" rx="20" ry="12" fill="#232b3a"/>
+        <ellipse cx="95" cy="183" rx="20" ry="12" fill="#1a2030"/>
+
+        <!-- Head -->
+        <circle cx="78" cy="64" r="44" fill="url(#catBody)"/>
+
+        <!-- Ears -->
+        <path d="M44,38 L34,2 L70,28 Z" fill="url(#catBodyDark)"/>
+        <path d="M114,38 L128,0 L86,26 Z" fill="url(#catBodyDark)"/>
+        <path d="M48,33 L42,12 L64,28 Z" fill="#6b5a63"/>
+        <path d="M110,33 L120,8 L92,24 Z" fill="#6b5a63"/>
+
+        <!-- Sleepy closed eyes -->
+        <path d="M56,64 Q66,72 76,64" stroke="#cbd5e1" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <path d="M86,64 Q96,72 106,64" stroke="#cbd5e1" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Nose & mouth -->
+        <path d="M76,80 L86,80 L81,88 Z" fill="#c98fa0"/>
+        <path d="M81,88 Q81,94 73,96" stroke="#cbd5e1" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M81,88 Q81,94 89,96" stroke="#cbd5e1" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+        <!-- Whiskers -->
+        <path d="M48,82 L14,76" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+        <path d="M48,90 L14,90" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+        <path d="M50,98 L18,104" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+        <path d="M108,82 L142,76" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+        <path d="M108,90 L142,90" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+        <path d="M106,98 L138,104" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+      </svg>
     </div>
   </section>
 
@@ -99,8 +166,48 @@
     <p>We are passionate about enriching the lives of cats and their humans. Every product is carefully selected for quality, safety, and fun. From interactive toys to cozy beds, we bring only the best for your furry companions.</p>
   </section>
 
-  <footer>
-    <p>&copy; 2026 Tails & Toys LLC • Built with care for cats</p>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-col footer-brand">
+        <div class="footer-logo">
+          <svg class="footer-cat" width="34" height="34" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="50" cy="72" rx="30" ry="22"/>
+            <circle cx="50" cy="38" r="21"/>
+            <path d="M33 27 L24 6 L46 21 Z"/>
+            <path d="M67 27 L76 6 L54 21 Z"/>
+            <path d="M78 62 C100 56 98 34 82 35 C70 36 71 52 80 58 Z"/>
+          </svg>
+          <span class="brand-text">Tailsandtoys</span>
+        </div>
+        <p class="footer-tagline">Premium toys, beds & accessories to keep your cat happy, healthy, and entertained.</p>
+        <a href="https://ig.me/m/tailsandtoysllc" target="_blank" rel="noopener" class="footer-social">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @tailsandtoysllc
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="#shop" onclick="filterProducts('all')">Shop</a>
+        <a href="#about">About Us</a>
+        <a href="cart.html">Your Cart</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Get in Touch</h4>
+        <a href="mailto:hello@tailsandtoys.com">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+          hello@tailsandtoys.com
+        </a>
+        <a href="tel:+18001234567">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.32 1.61.57 2.39a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.69-1.27a2 2 0 0 1 2.11-.45c.78.25 1.58.44 2.39.57A2 2 0 0 1 22 16.92z"/></svg>
+          +1 (800) 123-4567
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Tailsandtoys. All rights reserved. Made with ♥ for cats.</p>
+    </div>
   </footer>
 
   <!-- Cart Overlay (click to close cart) -->
@@ -117,10 +224,13 @@
       <span>Total</span>
       <span id="cartTotal">$0.00</span>
     </div>
-    <a href="cart.html" class="btn-outline full-width" style="text-align:center; margin-bottom: 10px;">View Full Cart</a>
-    <button onclick="checkoutInstagram()" class="btn-primary full-width">Checkout via Instagram</button>
+    <a href="cart.html" class="btn-primary full-width" style="text-align:center;">View Full Cart</a>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-init.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

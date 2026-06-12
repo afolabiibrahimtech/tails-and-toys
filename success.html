@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Confirmed - Tails & Toys LLC</title>
+  <title>Order Confirmed - Tailsandtoys</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,23 +11,55 @@
   <header>
     <nav>
       <div class="logo">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 4.5C9 4.5 6 7 6 10.5C6 14 12 19.5 12 19.5C12 19.5 18 14 18 10.5C18 7 15 4.5 12 4.5Z"/>
-          <circle cx="9" cy="9" r="1.5"/>
-          <circle cx="15" cy="9" r="1.5"/>
+        <a href="index.html" class="logo-link">
+        <svg class="cat-mascot" width="46" height="46" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Tail -->
+          <path d="M35 85 C 8 85, 2 48, 24 33 C 30 29, 37 36, 31 44 C 20 55, 24 76, 40 79 Z" fill="#1e293b"/>
+          <!-- Back legs -->
+          <ellipse cx="46" cy="98" rx="11" ry="7" fill="#1e293b"/>
+          <ellipse cx="70" cy="98" rx="11" ry="7" fill="#1e293b"/>
+          <!-- Body -->
+          <ellipse cx="58" cy="80" rx="27" ry="21" fill="#1e293b"/>
+          <!-- Head -->
+          <circle cx="79" cy="52" r="16" fill="#1e293b"/>
+          <!-- Ears -->
+          <path d="M69 41 L64 28 L78 39 Z" fill="#1e293b"/>
+          <path d="M90 41 L97 27 L82 38 Z" fill="#1e293b"/>
+          <!-- Animated paw swiping at the ball -->
+          <g class="cat-paw">
+            <path d="M80 60 C 93 55, 101 45, 103 34 C 105 30, 110 32, 109 38 C 106 51, 96 63, 85 68 Z" fill="#1e293b"/>
+          </g>
+          <!-- Animated toy ball -->
+          <circle class="cat-toy-ball" cx="106" cy="26" r="9" fill="url(#mascotBallGradient3)"/>
+          <defs>
+            <radialGradient id="mascotBallGradient3" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#fde68a"/>
+              <stop offset="35%" stop-color="#34d399"/>
+              <stop offset="70%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#a78bfa"/>
+            </radialGradient>
+          </defs>
         </svg>
-        <h1>Tails & Toys</h1>
+        <h1><span class="brand-text">Tailsandtoys</span></h1>
+        </a>
       </div>
       <div class="nav-links">
         <a href="index.html">Shop</a>
         <a href="index.html#about">About</a>
+      </div>
+      <div class="nav-actions">
+        <a href="index.html" class="btn-outline">← Continue Shopping</a>
       </div>
     </nav>
   </header>
 
   <section class="cart-page">
     <div class="empty-cart">
-      <h2>🎉 Payment successful!</h2>
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 12.5 L11 15.5 L16 9"/>
+      </svg>
+      <h2>Payment successful!</h2>
       <p style="margin-bottom: 1.5rem; color: #475569;">
         Thanks for your order — a confirmation has been sent to your email by Stripe.
         We'll be in touch shortly with shipping details.
@@ -36,8 +68,47 @@
     </div>
   </section>
 
-  <footer>
-    <p>&copy; 2026 Tails & Toys LLC</p>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-col footer-brand">
+        <div class="footer-logo">
+          <svg class="footer-cat" width="34" height="34" viewBox="0 0 100 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <ellipse cx="50" cy="72" rx="30" ry="22"/>
+            <circle cx="50" cy="38" r="21"/>
+            <path d="M33 27 L24 6 L46 21 Z"/>
+            <path d="M67 27 L76 6 L54 21 Z"/>
+            <path d="M78 62 C100 56 98 34 82 35 C70 36 71 52 80 58 Z"/>
+          </svg>
+          <span class="brand-text">Tailsandtoys</span>
+        </div>
+        <p class="footer-tagline">Thanks for shopping with us — your cat is in for a treat!</p>
+        <a href="https://ig.me/m/tailsandtoysllc" target="_blank" rel="noopener" class="footer-social">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @tailsandtoysllc
+        </a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Shop</a>
+        <a href="index.html#about">About Us</a>
+      </div>
+
+      <div class="footer-col">
+        <h4>Need Help?</h4>
+        <a href="mailto:hello@tailsandtoys.com">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+          hello@tailsandtoys.com
+        </a>
+        <a href="tel:+18001234567">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.32 1.61.57 2.39a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.69-1.27a2 2 0 0 1 2.11-.45c.78.25 1.58.44 2.39.57A2 2 0 0 1 22 16.92z"/></svg>
+          +1 (800) 123-4567
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Tailsandtoys. All rights reserved. Made with ♥ for cats.</p>
+    </div>
   </footer>
 
   <script>

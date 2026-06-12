@@ -1,28 +1,10 @@
-// ===== Default Product (always shown, can't be deleted from admin) =====
-// Each entry in "variations" is one size + color combination with its own
-// stock count, e.g. { size: "S", color: "Blue", stock: 4 }. Measurement is
-// a single product-level field, shown separately from size/color.
+// ===== Default Products =====
+// Always-shown products that aren't added via the admin panel. Each entry
+// in "variations" is one size + color combination with its own stock
+// count, e.g. { size: "S", color: "Blue", stock: 4 }. Measurement is a
+// single product-level field, shown separately from size/color.
 // "price" is in USD.
-const DEFAULT_PRODUCTS = [
-  {
-    id: 1,
-    name: "Interactive Feather Wand",
-    description: "A playful wand toy with a feathered tip to engage your cat's natural hunting instincts.",
-    measurement: "45 x 5 x 5",
-    price: 5.50,
-    discount: 0,
-    hidden: false,
-    images: ["images/feather-wand.jpg"],
-    category: "toys",
-    variations: [
-      { size: "S", color: "Blue", stock: 4 },
-      { size: "S", color: "Pink", stock: 2 },
-      { size: "M", color: "Blue", stock: 6 },
-      { size: "M", color: "Pink", stock: 0 },
-      { size: "L", color: "Natural", stock: 3 }
-    ]
-  }
-];
+const DEFAULT_PRODUCTS = [];
 
 // Human-friendly labels for category values
 const CATEGORY_LABELS = {
@@ -34,15 +16,18 @@ let currentCategory = 'all';
 
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-// Combine the default product(s) with anything added via the admin panel,
+// Raw product documents loaded from Firestore (the shared product catalog).
+// Populated by loadProductsFromFirestore() and kept up to date in real time.
+let firestoreProducts = [];
+
+// Combine the default product(s) with anything stored in Firestore,
 // excluding any products the admin has marked as hidden. Normalizes older
 // products into the current "variations" array of
 // { size, color, stock } combinations, with "measurement" as a separate
 // product-level field.
 function getAllProducts() {
-  const customProducts = JSON.parse(localStorage.getItem('products')) || [];
-  return [...DEFAULT_PRODUCTS, ...customProducts]
-    .filter(p => !p.hidden)
+  return [...DEFAULT_PRODUCTS, ...firestoreProducts]
+    .filter(p => !p.hidden && !p.removed)
     .map(p => {
       const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
       const measurement = p.measurement || (p.variations && p.variations[0] && p.variations[0].measurement) || '';
@@ -66,6 +51,21 @@ function getAllProducts() {
 
       return { ...p, images, variations, measurement, colorImages: p.colorImages || {} };
     });
+}
+
+// Loads the product catalog from Firestore and keeps it live: any change
+// made in the admin panel (on any device) is reflected here automatically.
+function loadProductsFromFirestore() {
+  db.collection('products').onSnapshot(
+    snapshot => {
+      firestoreProducts = snapshot.docs.map(doc => ({ id: Number(doc.id), ...doc.data() }));
+      renderProducts(currentCategory);
+    },
+    err => {
+      console.error('Failed to load products from Firestore:', err);
+      renderProducts(currentCategory);
+    }
+  );
 }
 
 // ===== Stock helpers (operate on a single size/color variation) =====
@@ -200,11 +200,27 @@ function renderProducts(category = currentCategory) {
 // Builds the sliding image track + pagination dots markup for a given
 // list of image URLs. Used both for the initial render and when switching
 // to a color that has its own photo set.
+// Cloudinary returns the original uploaded photo's full size, which can be
+// large/slow to load. For any Cloudinary URL, we cap the size and let
+// the browser's CSS (object-fit: cover) handle cropping to the card's
+// frame — adding a forced crop here on top of that double-crops photos
+// and makes them look too "zoomed in".
+function cloudinaryDisplayUrl(url) {
+  if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', '/upload/c_limit,w_1000,q_auto,f_auto/');
+}
+
+// Smaller size cap for cart thumbnails.
+function cloudinaryThumbUrl(url) {
+  if (!url || !url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
+  return url.replace('/upload/', '/upload/c_limit,w_400,q_auto,f_auto/');
+}
+
 function buildImageMarkup(images, placeholder, productName) {
   const list = (images && images.length) ? images : [placeholder];
 
   const trackHTML = list.map((src, i) =>
-    `<img class="product-img" src="${src}" alt="${productName}${list.length > 1 ? ` (image ${i + 1})` : ''}" draggable="false" onerror="this.src='${placeholder}'">`
+    `<img class="product-img" src="${cloudinaryDisplayUrl(src)}" alt="${productName}${list.length > 1 ? ` (image ${i + 1})` : ''}" draggable="false" onerror="this.src='${placeholder}'">`
   ).join('');
 
   const dotsHTML = list.length > 1
@@ -547,7 +563,7 @@ function renderCartSidebar() {
 
   container.innerHTML = cart.map((item, index) => `
     <div class="cart-sidebar-item">
-      <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/60x60/bfdbfe/1e40af?text=Cat'">
+      <img src="${cloudinaryThumbUrl(item.image)}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/60x60/bfdbfe/1e40af?text=Cat'">
       <div class="item-details">
         <h4>${item.name}${[item.size, item.color].filter(Boolean).length ? ` <span class="item-size">(${[item.size, item.color].filter(Boolean).join(', ')})</span>` : ''}</h4>
         <p>$${item.price.toFixed(2)}</p>
@@ -615,40 +631,9 @@ function closeCart() {
 }
 window.closeCart = closeCart;
 
-// ===== Checkout via Instagram =====
-const INSTAGRAM_USERNAME = "tailsandtoysllc";
-
-function checkoutInstagram() {
-  if (cart.length === 0) {
-    alert("Your cart is empty 🛍️");
-    return;
-  }
-
-  let message = "🛍️ New Order from Tails & Toys\n\n";
-  cart.forEach(item => {
-    const details = [item.size, item.color].filter(Boolean).join(', ');
-    const label = details ? `${item.name} (${details})` : item.name;
-    message += `${label} × ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}\n`;
-  });
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  message += `\nTotal: $${total.toFixed(2)}\n\nPlease confirm my order!`;
-
-  // Instagram DMs don't support pre-filled message text via link, so we
-  // copy the order details to the clipboard and let the customer paste
-  // them into the chat that opens.
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(message).catch(() => {});
-  }
-
-  alert("Your order details have been copied!\nPaste them into the Instagram DM that opens, then send.");
-
-  window.open(`https://ig.me/m/${INSTAGRAM_USERNAME}`, '_blank');
-}
-window.checkoutInstagram = checkoutInstagram;
-
 // ===== Initialize =====
 document.addEventListener('DOMContentLoaded', () => {
-  renderProducts();
+  loadProductsFromFirestore();
   updateCartCount();
   renderCartSidebar();
 
